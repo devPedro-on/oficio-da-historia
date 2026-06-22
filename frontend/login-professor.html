@@ -59,10 +59,11 @@
     </div>
 
     <div class="mt-6 text-[11px] text-slate-600 text-center max-w-xs leading-relaxed">
-        <p>💡 <span class="font-semibold">Ambiente Local:</span> Use qualquer CPF e a senha master <code class="bg-slate-900 px-1 py-0.5 rounded text-red-400 font-mono">admin123</code> para testar.</p>
+        <p>💡 <span class="font-semibold">Credenciais Master:</span> Utilize o CPF administrativo configurado e a senha master <code class="bg-slate-900 px-1 py-0.5 rounded text-red-400 font-mono">admin123</code> para aceder.</p>
     </div>
 
     <script>
+        // Máscara visual para o CPF (000.000.000-00)
         document.getElementById('cpf').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, "");
             if (value.length > 11) value = value.slice(0, 11);
@@ -72,12 +73,16 @@
             e.target.value = value;
         });
 
+        // Lógica de Autenticação com CPF Único
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            const cpfDigitado = document.getElementById('cpf').value.replace(/\D/g, "");
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('error-message');
 
-            if (password === 'admin123') {
+            // Validação estrita do CPF e Senha Master
+            if (cpfDigitado === '01927053005' && password === 'admin123') {
                 errorDiv.classList.add('hidden');
                 localStorage.setItem('oficio_session_role', 'teacher');
                 window.location.href = 'teacher.html';
