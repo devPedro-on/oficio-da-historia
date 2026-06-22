@@ -9,11 +9,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração da conexão com o Supabase usando a variável que você salvou na Render
+// Configuração robusta para ignorar rejeição de certificado autoassinado no Supabase
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL.includes('?') 
+        ? `${process.env.DATABASE_URL}&sslmode=no-verify` 
+        : `${process.env.DATABASE_URL}?sslmode=no-verify`,
     ssl: {
-        rejectUnauthorized: false // Permite conectar no Supabase ignorando o erro de certificado autoassinado
+        rejectUnauthorized: false
     }
 });
 
