@@ -73,6 +73,34 @@
             </form>
         </section>
 
+        <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4">
+            <div class="border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-serif font-bold text-history-gold">📜 Recrutamento de Novos Alunos</h2>
+                <p class="text-xs text-history-textMuted">Insira as credenciais para dar acesso imediato à plataforma pelo banco de dados.</p>
+            </div>
+            
+            <form id="formCadastroAluno" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Nome do Aluno</label>
+                        <input type="text" id="nomeAluno" placeholder="Ex: Alexandre Magno" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">CPF (Apenas números)</label>
+                        <input type="text" id="cpfAluno" maxlength="11" placeholder="Ex: 12345678901" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Senha Inicial</label>
+                        <input type="password" id="senhaAluno" placeholder="Ex: 123456" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
+                    ✒️ Selar Registro de Aluno
+                </button>
+            </form>
+        </section>
+
         <section class="bg-history-card border border-slate-800 rounded-xl p-6 opacity-60">
             <div class="border-b border-slate-800 pb-3">
                 <h2 class="text-xl font-serif font-bold text-slate-400">📚 Cadastrar Novo Curso ou HQ</h2>
@@ -92,7 +120,11 @@
         }
 
         const API_LIVE_URL = "https://oficio-backend-jg09.onrender.com/api/teacher/live";
+        const API_CADASTRAR_URL = "https://oficio-backend-jg09.onrender.com/api/admin/cadastrar-aluno";
 
+        // ==========================================
+        // LÓGICA DO GERENCIAMENTO DE LIVE
+        // ==========================================
         document.getElementById('live-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -119,10 +151,49 @@
                 }
             } catch (error) {
                 console.error("Erro na requisição:", error);
-                showStatus("Não foi possível conectar ao servidor backend no WSL.", "error");
+                showStatus("Não foi possível conectar ao servidor backend.", "error");
             }
         });
 
+        // ==========================================
+        // LÓGICA DO CADASTRO DE ALUNOS (NOVO)
+        // ==========================================
+        document.getElementById('formCadastroAluno').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nome = document.getElementById('nomeAluno').value.trim();
+            const cpf = document.getElementById('cpfAluno').value.trim();
+            const senha = document.getElementById('senhaAluno').value;
+
+            // Validação de tamanho básico de CPF no Front antes de disparar a API
+            if (cpf.length !== 11 || isNaN(cpf)) {
+                showStatus("O CPF deve conter exatamente 11 dígitos numéricos.", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(API_CADASTRAR_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, cpf, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showStatus(`🏛️ ${nome} foi matriculado com sucesso no Ofício da História!`, "success");
+                    document.getElementById('formCadastroAluno').reset();
+                } else {
+                    // Exibe a mensagem tratada da API (ex: CPF duplicado)
+                    showStatus(`⚠️ ${data.error || 'Erro ao realizar o cadastro.'}`, "error");
+                }
+            } catch (error) {
+                console.error("Erro na requisição de cadastro:", error);
+                showStatus("Não foi possível conectar ao servidor para matricular o aluno.", "error");
+            }
+        });
+
+        // FUNÇÃO GLOBAL DE FEEDBACK VISUAL
         function showStatus(message, type) {
             const el = document.getElementById('status-message');
             el.innerText = message;
