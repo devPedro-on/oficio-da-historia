@@ -1,12 +1,23 @@
 const express = require('express');
 const cors = require('cors');
+// Importa o cliente do PostgreSQL para conectar ao Supabase
+const { Pool } = require('pg');
+
 const app = express();
 
-// Permite que o frontend (mesmo rodando em outra porta/origem) acesse esta API sem bloqueios de segurança
+// Permite que o frontend acesse esta API sem bloqueios de segurança
 app.use(cors());
 app.use(express.json());
 
-// Base de dados simulada em memória (Posteriormente será conectada ao PostgreSQL gratuito no Supabase)
+// Configuração da conexão com o Supabase usando a variável que você salvou na Render
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Garante que a conexão criptografada funcione na Render
+    }
+});
+
+// Base de dados simulada em memória para conteúdos
 let courses = [
     {
         id: "curso_vikings",
@@ -33,17 +44,95 @@ let comics = [
     { id: "hq_4", title: "Mitologia: Bastidores", series: "Especial", cover: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=300&q=80" }
 ];
 
-// Estado inicial da aula ao vivo via Google Meet (Simula o controlo do painel do teu tio)
+// Estado inicial da aula ao vivo via Google Meet
 let liveSession = {
     isLive: true,
     title: "Módulo Especial: A Invasão de Lindisfarne",
     description: "A aula ao vivo já começou no Google Meet! Clica abaixo para entrares na sala, ligares a tua câmara e participares.",
-    meetUrl: "https://meet.google.com/abc-defg-hij" // Link dinâmico gerado pelo professor
+    meetUrl: "https://meet.google.com/abc-defg-hij"
 };
 
 /**
+ * ==========================================
+ * ROTAS DE AUTENTICAÇÃO E CADASTRO (SUPABASE)
+ * ==========================================
+ */
+
+/**
+ * ROTA NOVA: Cadastro de Alunos (Feito pelo Professor na Tela Master)
+ */
+app.post('/api/admin/cadastrar-aluno', async (req, res) => {
+    const { nome, cpf, senha } = req.body;
+
+    if (!nome || !cpf || !senha) {
+        return res.status(400).json({ error: 'Todos os campos (nome, cpf e senha) são obrigatórios.' });
+    }
+
+    try {
+        // Insere o aluno no banco real do Supabase
+        const resultado = await pool.query(
+            'INSERT INTO alunos (nome, cpf, senha) VALUES ($1, $2, $3) RETURNING id, nome, cpf',
+            [nome, cpf, senha]
+        );
+
+        return res.status(201).json({
+            success: true,
+            message: 'Aluno cadastrado com sucesso!',
+            aluno: resultado.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Erro ao cadastrar aluno:', error);
+        
+        // Código '23505' representa erro de chave única duplicada (CPF já existente)
+        if (error.code === '23504' || error.code === '23505') {
+            return res.status(400).json({ error: 'Este CPF já está cadastrado no sistema.' });
+        }
+
+        return res.status(500).json({ error: 'Erro interno ao salvar o aluno no banco.' });
+    }
+});
+
+/**
+ * ROTA NOVA: Login do Aluno (Validação no banco real)
+ */
+app.post('/api/login', async (req, res) => {
+    const { cpf, senha } = req.body;
+
+    if (!cpf || !senha) {
+        return res.status(400).json({ error: 'CPF e senha são obrigatórios.' });
+    }
+
+    try {
+        const resultado = await pool.query(
+            'SELECT id, nome, cpf FROM alunos WHERE cpf = $1 AND senha = $2',
+            [cpf, senha]
+        );
+
+        if (resultado.rows.length > 0) {
+            return res.json({
+                success: true,
+                message: 'Login realizado com sucesso!',
+                aluno: resultado.rows[0]
+            });
+        } else {
+            return res.status(401).json({ error: 'CPF ou senha incorretos.' });
+        }
+    } catch (error) {
+        console.error('Erro no login:', error);
+        return res.status(500).json({ error: 'Erro interno ao tentar autenticar.' });
+    }
+});
+
+
+/**
+ * ==========================================
+ * ROTAS DO DASHBOARD E CONTEÚDOS (EM MEMÓRIA)
+ * ==========================================
+ */
+
+/**
  * 1. ENDPOINT PRINCIPAL DO DASHBOARD (ALUNO)
- * Retorna o estado da live atual, a lista de cursos e as HQs disponíveis.
  */
 app.get('/api/dashboard', (req, res) => {
     res.json({
@@ -55,12 +144,10 @@ app.get('/api/dashboard', (req, res) => {
 
 /**
  * 2. ENDPOINT DE CONTROLO DO PROFESSOR (PAINEL DO TIO)
- * Permite ativar/desativar a live e atualizar o link do Google Meet em tempo real.
  */
 app.post('/api/teacher/live', (req, res) => {
     const { isLive, title, description, meetUrl } = req.body;
     
-    // Atualiza o estado global da sessão
     liveSession = {
         isLive: isLive !== undefined ? isLive : liveSession.isLive,
         title: title || liveSession.title,
@@ -70,13 +157,13 @@ app.post('/api/teacher/live', (req, res) => {
 
     res.json({ 
         success: true, 
-        message: "Painel de transmissão atualizado com sucesso!", 
+        message: "Painel de transmission atualizado com sucesso!", 
         liveSession 
     });
 });
 
 /**
- * 3. ENDPOINT PARA ADICIONAR NOVOS CURSOS (EXTENSIBILIDADE)
+ * 3. ENDPOINT PARA ADICIONAR NOVOS CURSOS
  */
 app.post('/api/courses', (req, res) => {
     const { title, description, thumbnail, category } = req.body;
@@ -95,9 +182,8 @@ app.post('/api/courses', (req, res) => {
     res.status(201).json(newCourse);
 });
 
-// Configuração da porta do servidor local
-const PORT = 3000;
+// Configuração dinâmica da porta (essencial para a Render)
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🏛️  Servidor do 'Ofício da História' a rodar com sucesso!`);
-    console.log(`🔗 API disponível em: http://localhost:${PORT}/api/dashboard`);
+    console.log(`🏛️  Servidor do 'Ofício da História' rodando com sucesso na porta ${PORT}!`);
 });
