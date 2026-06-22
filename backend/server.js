@@ -41,5 +41,11 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
+
+// ... (resto do código das rotas)
+
+// Garante que o servidor ouça todas as requisições na porta correta
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}!`));
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}!`);
+});
