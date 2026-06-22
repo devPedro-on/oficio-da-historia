@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-// Importa o cliente do PostgreSQL para conectar ao Supabase
 const { Pool } = require('pg');
 
 const app = express();
@@ -12,9 +11,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 app.use(cors());
 app.use(express.json());
 
-// Configuração limpa: a Render gerencia os parâmetros de SSL pela variável ambiente global
+// CONFIGURAÇÃO CORRIGIDA PARA O SUPABASE (Substitua pela sua senha real)
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
+    user: 'postgres.ppnwzocksaruknfhhkwe',
+    host: 'aws-0-sa-east-1.pooler.supabase.com',
+    database: 'postgres',
+    password: 'EluQy94XGVa3zg3f', 
+    port: 6543,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Base de dados simulada em memória para conteúdos
@@ -44,7 +50,6 @@ let comics = [
     { id: "hq_4", title: "Mitologia: Bastidores", series: "Especial", cover: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=300&q=80" }
 ];
 
-// Estado inicial da aula ao vivo via Google Meet
 let liveSession = {
     isLive: true,
     title: "Módulo Especial: A Invasão de Lindisfarne",
@@ -53,13 +58,7 @@ let liveSession = {
 };
 
 /**
- * ==========================================
  * ROTAS DE AUTENTICAÇÃO E CADASTRO (SUPABASE)
- * ==========================================
- */
-
-/**
- * ROTA NOVA: Cadastro de Alunos (Feito pelo Professor na Tela Master)
  */
 app.post('/api/admin/cadastrar-aluno', async (req, res) => {
     const { nome, cpf, senha } = req.body;
@@ -69,7 +68,6 @@ app.post('/api/admin/cadastrar-aluno', async (req, res) => {
     }
 
     try {
-        // Insere o aluno no banco real do Supabase
         const resultado = await pool.query(
             'INSERT INTO alunos (nome, cpf, senha) VALUES ($1, $2, $3) RETURNING id, nome, cpf',
             [nome, cpf, senha]
@@ -84,7 +82,6 @@ app.post('/api/admin/cadastrar-aluno', async (req, res) => {
     } catch (error) {
         console.error('Erro ao cadastrar aluno:', error);
         
-        // Código '23505' representa erro de chave única duplicada (CPF já existente)
         if (error.code === '23504' || error.code === '23505') {
             return res.status(400).json({ error: 'Este CPF já está cadastrado no sistema.' });
         }
@@ -93,9 +90,6 @@ app.post('/api/admin/cadastrar-aluno', async (req, res) => {
     }
 });
 
-/**
- * ROTA NOVA: Login do Aluno (Validação no banco real)
- */
 app.post('/api/login', async (req, res) => {
     const { cpf, senha } = req.body;
 
@@ -124,15 +118,8 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-
 /**
- * ==========================================
- * ROTAS DO DASHBOARD E CONTEÚDOS (EM MEMÓRIA)
- * ==========================================
- */
-
-/**
- * 1. ENDPOINT PRINCIPAL DO DASHBOARD (ALUNO)
+ * ROTAS DO DASHBOARD E CONTEÚDOS
  */
 app.get('/api/dashboard', (req, res) => {
     res.json({
@@ -142,9 +129,6 @@ app.get('/api/dashboard', (req, res) => {
     });
 });
 
-/**
- * 2. ENDPOINT DE CONTROLO DO PROFESSOR (PAINEL DO TIO)
- */
 app.post('/api/teacher/live', (req, res) => {
     const { isLive, title, description, meetUrl } = req.body;
     
@@ -157,14 +141,11 @@ app.post('/api/teacher/live', (req, res) => {
 
     res.json({ 
         success: true, 
-        message: "Painel de transmission atualizado com sucesso!", 
+        message: "Painel de transmissão atualizado com sucesso!", 
         liveSession 
     });
 });
 
-/**
- * 3. ENDPOINT PARA ADICIONAR NOVOS CURSOS
- */
 app.post('/api/courses', (req, res) => {
     const { title, description, thumbnail, category } = req.body;
     if (!title) return res.status(400).json({ error: "O título do curso é obrigatório." });
@@ -182,7 +163,6 @@ app.post('/api/courses', (req, res) => {
     res.status(201).json(newCourse);
 });
 
-// Configuração dinâmica da porta (essencial para a Render)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🏛️  Servidor do 'Ofício da História' rodando com sucesso na porta ${PORT}!`);
