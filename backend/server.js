@@ -13,14 +13,7 @@ app.use(express.json());
 
 // CONFIGURAÇÃO CORRIGIDA PARA O SUPABASE (Substitua pela sua senha real)
 const pool = new Pool({
-    user: 'postgres.ppnwzocksaruknfhhkwe',
-    host: 'aws-0-sa-east-1.pooler.supabase.com',
-    database: 'postgres',
-    password: 'EluQy94XGVa3zg3f', 
-    port: 6543,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    connectionString: 'postgresql://postgres.ppnwzocksaruknfhhkwe:EluQy94XGVa3zg3f@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require',
 });
 
 // Base de dados simulada em memória para conteúdos
