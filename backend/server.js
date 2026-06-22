@@ -5,18 +5,16 @@ const { Pool } = require('pg');
 
 const app = express();
 
+// Força o Node-Postgres a ignorar a verificação de certificado autoassinado globalmente
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 // Permite que o frontend acesse esta API sem bloqueios de segurança
 app.use(cors());
 app.use(express.json());
 
-// Configuração robusta para ignorar rejeição de certificado autoassinado no Supabase
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL.includes('?') 
-        ? `${process.env.DATABASE_URL}&sslmode=no-verify` 
-        : `${process.env.DATABASE_URL}?sslmode=no-verify`,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    connectionString: process.env.DATABASE_URL,
+    ssl: true // Ativa o SSL sem passar objetos complexos que o driver às vezes rejeita
 });
 
 // Base de dados simulada em memória para conteúdos
