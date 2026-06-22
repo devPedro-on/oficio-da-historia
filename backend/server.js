@@ -2,37 +2,53 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
+// Configuração do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
 const app = express();
-app.use(cors());
+
+// Configuração de CORS para permitir requisições do seu Vercel e outros
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
-// Cadastro
+// Rota de Cadastro de Aluno
 app.post('/api/admin/cadastrar-aluno', async (req, res) => {
     const { nome, cpf, senha } = req.body;
     const { data, error } = await supabase.from('alunos').insert([{ nome, cpf, senha }]).select();
+    
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ success: true, aluno: data[0] });
 });
 
-// Login
+// Rota de Login
 app.post('/api/login', async (req, res) => {
     const { cpf, senha } = req.body;
-    const { data, error } = await supabase.from('alunos').select('id, nome, cpf').eq('cpf', cpf).eq('senha', senha).single();
+    const { data, error } = await supabase.from('alunos')
+        .select('id, nome, cpf')
+        .eq('cpf', cpf)
+        .eq('senha', senha)
+        .single();
+
     if (error || !data) return res.status(401).json({ error: 'Credenciais inválidas.' });
     return res.json({ success: true, aluno: data });
 });
 
-// A ROTA QUE EU TINHA REMOVIDO (Dashboard) - Agora ela precisa estar aqui:
+// Rota de Dashboard (Carrega Cursos e Quadrinhos)
 app.get('/api/dashboard', async (req, res) => {
     try {
-        // Aqui buscamos cursos e quadrinhos do Supabase
-        const { data: courses } = await supabase.from('cursos').select('*');
-        const { data: comics } = await supabase.from('quadrinhos').select('*');
+        const { data: courses, error: coursesError } = await supabase.from('cursos').select('*');
+        const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
         
+        if (coursesError || comicsError) throw new Error("Erro ao buscar dados do banco");
+
         return res.json({ 
             success: true, 
-            liveSession: { isLive: false }, // Ajuste conforme necessário
+            liveSession: { isLive: false },
             courses: courses || [], 
             comics: comics || [] 
         });
@@ -41,10 +57,7 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-
-// ... (resto do código das rotas)
-
-// Garante que o servidor ouça todas as requisições na porta correta
+// Inicialização do Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}!`);
