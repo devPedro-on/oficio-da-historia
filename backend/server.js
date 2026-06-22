@@ -13,7 +13,7 @@ app.use(express.json());
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Garante que a conexão criptografada funcione na Render
+        rejectUnauthorized: false // Permite conectar no Supabase ignorando o erro de certificado autoassinado
     }
 });
 
