@@ -8,17 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// CONFIGURAÇÃO BLINDADA: Separada para evitar erro de parsing do driver pg
 const pool = new Pool({
-    user: 'postgres.ppnwzocksaruknfhhkwe',
-    host: 'aws-0-sa-east-1.pooler.supabase.com',
-    database: 'postgres',
-    password: 'EluQy94XGVa3zg3f',
-    port: 6543,
+    connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false
-    },
-    connectionTimeoutMillis: 10000 
+    }
 });
 
 // Tratamento de erro silencioso para evitar derrubar o servidor
