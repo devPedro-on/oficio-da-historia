@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// String de conexão direta (porta 5432)
+// CONFIGURAÇÃO COM SSL DESATIVADO PARA TESTE
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // Isto diz ao Node para aceitar certificados autoassinados
     }
 });
 
