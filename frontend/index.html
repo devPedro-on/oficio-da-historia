@@ -8,24 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        history: {
-                            bg: '#0B0F17',
-                            card: '#131A26',
-                            gold: '#D4AF37',
-                            goldHover: '#AA8417',
-                            textMuted: '#94A3B8'
-                        }
-                    }
-                }
-            }
+            theme: { extend: { colors: { history: { bg: '#0B0F17', card: '#131A26', gold: '#D4AF37', goldHover: '#AA8417', textMuted: '#94A3B8' } } } }
         }
     </script>
-    <style>
-        .bg-premium-gradient { background: radial-gradient(circle at top, #1a2333 0%, #0b0f17 70%); }
-    </style>
+    <style> .bg-premium-gradient { background: radial-gradient(circle at top, #1a2333 0%, #0b0f17 70%); } </style>
 </head>
 <body class="bg-history-bg text-slate-100 min-h-screen bg-premium-gradient font-sans">
 
@@ -34,29 +20,20 @@
         <div class="flex items-center gap-4">
             <div class="text-right">
                 <span class="block text-sm font-medium text-history-textMuted">Olá, Estudante</span>
-                <!-- Botão de Sair adicionado aqui -->
-                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">
-                    Sair da conta
-                </button>
+                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">Sair da conta</button>
             </div>
             <div class="w-10 h-10 rounded-full border-2 border-history-gold bg-slate-700 flex items-center justify-center font-bold text-history-gold">H</div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
-        <!-- O restante do seu corpo HTML permanece igual -->
         <div id="live-banner" class="hidden bg-amber-950/40 border border-history-gold/40 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-amber-950/10">
             <div class="space-y-1">
-                <div class="flex items-center gap-2 text-red-500 font-semibold tracking-wider text-xs uppercase">
-                    <span class="h-2 w-2 rounded-full bg-red-500 inline-block animate-ping"></span>
-                    Aula Ao Vivo Agora
-                </div>
+                <div class="flex items-center gap-2 text-red-500 font-semibold tracking-wider text-xs uppercase"><span class="h-2 w-2 rounded-full bg-red-500 inline-block animate-ping"></span> Aula Ao Vivo Agora</div>
                 <h2 id="live-title" class="text-xl font-bold font-serif text-white"></h2>
                 <p id="live-description" class="text-sm text-history-textMuted"></p>
             </div>
-            <button id="meet-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg shadow-lg shadow-history-gold/20 transition-all duration-200 transform hover:scale-105 whitespace-nowrap">
-                ⚔️ Entrar no Google Meet
-            </button>
+            <button id="meet-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg transition-all">⚔️ Entrar no Google Meet</button>
         </div>
 
         <section class="space-y-4">
@@ -70,43 +47,39 @@
         </section>
     </main>
 
-    <footer class="text-center py-12 text-xs text-history-textMuted border-t border-slate-900 mt-20">
-        <p>© 2026 Ofício da História. Criado para espalhar conhecimento de forma imersiva.</p>
-    </footer>
-
     <script>
-        // Verificação de sessão
-        if (!localStorage.getItem('oficio_session_user')) {
-            window.location.href = 'login.html';
-        }
+        if (!localStorage.getItem('oficio_session_user')) window.location.href = 'login.html';
 
-        // Função de Logout
-        document.getElementById('btn-logout').addEventListener('click', function() {
+        document.getElementById('btn-logout').addEventListener('click', () => {
             localStorage.removeItem('oficio_session_user');
-            localStorage.removeItem('oficio_session_role');
             window.location.href = 'login.html';
         });
 
-        const API_URL = "https://oficio-backend-jg09.onrender.com/api/dashboard";
-
         async function loadDashboard() {
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error("Falha ao carregar");
+                const response = await fetch("https://oficio-backend-jg09.onrender.com/api/dashboard");
                 const data = await response.json();
 
-                // Lógica de renderização...
-                if (data.liveSession && data.liveSession.isLive) {
+                if (data.liveSession?.isLive) {
                     document.getElementById('live-title').innerText = data.liveSession.title;
                     document.getElementById('live-description').innerText = data.liveSession.description;
+                    document.getElementById('meet-btn').onclick = () => window.open(data.liveSession.meetUrl, '_blank');
                     document.getElementById('live-banner').classList.remove('hidden');
                 }
-                // ... (seu código de renderização continua aqui)
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-            }
-        }
 
+                document.getElementById('courses-container').innerHTML = data.courses.map(c => `
+                    <div class="bg-history-card border border-slate-800 p-5 rounded-xl">
+                        <h4 class="font-bold text-lg">${c.title}</h4>
+                        <div class="w-full bg-slate-800 h-2 mt-2 rounded-full"><div class="bg-history-gold h-full rounded-full" style="width: ${c.progress}%"></div></div>
+                    </div>`).join('');
+
+                document.getElementById('comics-container').innerHTML = data.comics.map(hq => `
+                    <div class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold">
+                        <img src="${hq.cover}" class="rounded-lg mb-2">
+                        <h5 class="text-sm font-bold">${hq.title}</h5>
+                    </div>`).join('');
+            } catch (err) { console.error("Erro ao carregar dashboard:", err); }
+        }
         loadDashboard();
     </script>
 </body>
