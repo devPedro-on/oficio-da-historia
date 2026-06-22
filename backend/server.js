@@ -12,9 +12,9 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 app.use(cors());
 app.use(express.json());
 
+// Configuração limpa: a Render gerencia os parâmetros de SSL pela variável ambiente global
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: true // Ativa o SSL sem passar objetos complexos que o driver às vezes rejeita
+    connectionString: process.env.DATABASE_URL
 });
 
 // Base de dados simulada em memória para conteúdos
