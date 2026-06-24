@@ -54,12 +54,12 @@
     <script>
         // Redirecionamento de login comentado temporariamente para testes se necessário
         if (!localStorage.getItem('oficio_session_user')) {
-            window.location.href = 'login.html';
+            window.location.href = 'login-aluno.html';
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             localStorage.removeItem('oficio_session_user');
-            window.location.href = 'login.html';
+            window.location.href = 'login-aluno.html';
         });
 
         async function loadDashboard() {
