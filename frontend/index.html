@@ -22,7 +22,7 @@
                 <span class="block text-sm font-medium text-history-textMuted">Olá, Estudante</span>
                 <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">Sair da conta</button>
             </div>
-            <div class="w-10 h-10 rounded-full border-2 border-history-gold bg-slate-700 flex items-center justify-center font-bold text-history-gold">H</div>
+            <div id="user-avatar" class="w-10 h-10 rounded-full border-2 border-history-gold bg-slate-700 flex items-center justify-center font-bold text-history-gold">H</div>
         </div>
     </nav>
 
@@ -53,8 +53,20 @@
 
     <script>
         // Redirecionamento de login comentado temporariamente para testes se necessário
-        if (!localStorage.getItem('oficio_session_user')) {
+        const sessionData = localStorage.getItem('oficio_session_user');
+        if (!sessionData) {
             window.location.href = 'login-aluno.html';
+        } else {
+            // Aplica dinamicamente o primeiro nome e a letra inicial do avatar se os dados existirem
+            try {
+                const usuario = JSON.parse(sessionData);
+                if (usuario && usuario.nome) {
+                    document.querySelector('nav .text-right span').innerText = `Olá, ${usuario.nome.split(' ')[0]}`;
+                    document.getElementById('user-avatar').innerText = usuario.nome.charAt(0).toUpperCase();
+                }
+            } catch (e) {
+                console.error("Erro ao ler dados da sessão:", e);
+            }
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
