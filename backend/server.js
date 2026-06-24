@@ -42,10 +42,17 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/dashboard', async (req, res) => {
     try {
         const { data: courses, error: coursesError } = await supabase.from('cursos').select('*');
-        const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
-        
-        if (coursesError || comicsError) throw new Error("Erro ao buscar dados do banco");
+        if (coursesError) {
+            console.error("❌ Erro na tabela 'cursos':", coursesError);
+            throw coursesError;
+        }
 
+        const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
+        if (comicsError) {
+            console.error("❌ Erro na tabela 'quadrinhos':", comicsError);
+            throw comicsError;
+        }
+        
         return res.json({ 
             success: true, 
             liveSession: { isLive: false },
@@ -53,7 +60,8 @@ app.get('/api/dashboard', async (req, res) => {
             comics: comics || [] 
         });
     } catch (error) {
-        return res.status(500).json({ error: 'Erro ao carregar dashboard' });
+        console.error("💥 Erro fatal no endpoint /api/dashboard:", error.message || error);
+        return res.status(500).json({ error: 'Erro ao carregar dashboard', details: error.message });
     }
 });
 
