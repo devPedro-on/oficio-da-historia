@@ -44,44 +44,78 @@
         <form id="login-form" class="space-y-4">
             <div class="space-y-1">
                 <label for="cpf" class="text-xs font-semibold text-history-textMuted uppercase tracking-wider">CPF Administrativo</label>
-                <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
+                <input type="text" id="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
             </div>
 
             <div class="space-y-1">
                 <label for="password" class="text-xs font-semibold text-history-textMuted uppercase tracking-wider">Senha Master</label>
-                <input type="password" id="password" placeholder="••••••••" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
+                <div class="relative">
+                    <input type="password" id="password" placeholder="••••••••" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 pr-10 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
+                    <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400 transition-colors select-none flex items-center justify-center">
+                        <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.5l-1-2.5M12 9V6M16 9.5l1-2.5M20 11l1.5-2" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-sm transition-all duration-200 mt-2 shadow-lg shadow-red-900/20">
+            <button type="submit" id="login-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-sm transition-all duration-200 mt-2 shadow-lg shadow-red-900/20">
                 Autenticar Painel Master
             </button>
         </form>
-    </div>
 
-    <div class="mt-6 text-[11px] text-slate-600 text-center max-w-xs leading-relaxed">
-        <p>💡 <span class="font-semibold">Credenciais Master:</span> Utilize o CPF administrativo configurado e a senha master <code class="bg-slate-900 px-1 py-0.5 rounded text-red-400 font-mono">admin123</code> para aceder.</p>
+        <div class="text-center border-t border-slate-800/60 pt-4">
+            <a href="login-aluno.html" class="text-xs text-history-textMuted hover:text-history-gold transition-colors">
+                ← Voltar para o Portal do Aluno
+            </a>
+        </div>
     </div>
 
     <script>
-        // Máscara visual para o CPF (000.000.000-00)
+        if (localStorage.getItem('oficio_session_role') === 'teacher') {
+            window.location.href = 'teacher.html';
+        }
+
+        // Alternar visibilidade com a nova dinâmica de ícones
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const eyeOpen = document.getElementById('eye-open');
+            const eyeClosed = document.getElementById('eye-closed');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        });
+
         document.getElementById('cpf').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, "");
             if (value.length > 11) value = value.slice(0, 11);
-            value = value.replace(/(\d{3})(\d)/, "$1.$2");
-            value = value.replace(/(\d{3})(\d)/, "$1.$2");
-            value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            value = value.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
             e.target.value = value;
         });
 
-        // Lógica de Autenticação com CPF Único
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const cpfDigitado = document.getElementById('cpf').value.replace(/\D/g, "");
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('error-message');
+            const btn = document.getElementById('login-btn');
 
-            // Validação estrita do CPF e Senha Master
+            btn.innerText = "Autenticando...";
+            btn.disabled = true;
+            errorDiv.classList.add('hidden');
+
             if (cpfDigitado === '01927053005' && password === 'admin123') {
                 errorDiv.classList.add('hidden');
                 localStorage.setItem('oficio_session_role', 'teacher');
@@ -89,6 +123,8 @@
             } else {
                 errorDiv.classList.remove('hidden');
                 document.getElementById('password').value = '';
+                btn.innerText = "Autenticar Painel Master";
+                btn.disabled = false;
             }
         });
     </script>

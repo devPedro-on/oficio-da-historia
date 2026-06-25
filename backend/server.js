@@ -1,20 +1,37 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const multer = require('multer');
 
 // Configuração do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const app = express();
 
-// Configuração de CORS para permitir requisições do seu Vercel e outros
+// Configuração do Multer para gerenciar o upload de arquivos binários em memória
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Configuração de CORS expandida para aceitar as novas funções de exclusão
 app.use(cors({
     origin: '*', 
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type']
 }));
 
 app.use(express.json());
+
+// Estado temporário na memória para a Live
+let liveState = {
+    isLive: false,
+    title: "Módulo Especial: A Invasão de Lindisfarne",
+    description: "A aula ao vivo já começou no Google Meet! Clique abaixo para entrar na sala.",
+    meetUrl: "https://meet.google.com/abc-defg-hij"
+};
+
+// ==========================================
+// SUAS ROTAS ORIGINAIS (INTACTAS)
+// ==========================================
 
 // Rota de Cadastro de Aluno
 app.post('/api/admin/cadastrar-aluno', async (req, res) => {
@@ -55,7 +72,7 @@ app.get('/api/dashboard', async (req, res) => {
         
         return res.json({ 
             success: true, 
-            liveSession: { isLive: false },
+            liveSession: liveState,
             courses: courses || [], 
             comics: comics || [] 
         });
@@ -63,6 +80,143 @@ app.get('/api/dashboard', async (req, res) => {
         console.error("💥 Erro fatal no endpoint /api/dashboard:", error.message || error);
         return res.status(500).json({ error: 'Erro ao carregar dashboard', details: error.message });
     }
+});
+
+
+// ==========================================
+// NOVAS ROTAS ADMINISTRATIVAS (POST COM MULTER)
+// ==========================================
+
+// Atualizar Aula Ao Vivo
+app.post('/api/teacher/live', (req, res) => {
+    const { isLive, title, description, meetUrl } = req.body;
+    liveState = { isLive, title, description, meetUrl };
+    return res.json({ success: true, liveSession: liveState });
+});
+
+// Rota de Cadastro de Curso (Suporta arquivo binário da Capa)
+app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) => {
+    try {
+        const { titulo, descricao } = req.body;
+        let capaUrl = "";
+
+        if (req.file) {
+            const fileExt = req.file.originalname.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            
+            // Upload para o Bucket público 'capas-cursos' no Supabase Storage
+            const { error: storageError } = await supabase.storage
+                .from('capas-cursos')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+            if (storageError) throw storageError;
+
+            const { data: urlData } = supabase.storage.from('capas-cursos').getPublicUrl(fileName);
+            capaUrl = urlData.publicUrl;
+        }
+
+        const { data, error } = await supabase
+            .from('cursos')
+            .insert([{ titulo, descricao, imagem: capaUrl }])
+            .select();
+
+        if (error) throw error;
+        return res.status(201).json({ success: true, curso: data[0] });
+    } catch (error) {
+        console.error("❌ Erro ao cadastrar curso:", error);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// Rota de Cadastro de HQ (Suporta arquivo binário do PDF)
+app.post('/api/admin/cadastrar-hq', upload.single('arquivo'), async (req, res) => {
+    try {
+        const { titulo, volume } = req.body;
+        let arquivoUrl = "";
+
+        if (req.file) {
+            const fileName = `${Date.now()}.pdf`;
+            
+            // Upload para o Bucket público 'arquivos-hqs' no Supabase Storage
+            const { error: storageError } = await supabase.storage
+                .from('arquivos-hqs')
+                .upload(fileName, req.file.buffer, { contentType: 'application/pdf' });
+
+            if (storageError) throw storageError;
+
+            const { data: urlData } = supabase.storage.from('arquivos-hqs').getPublicUrl(fileName);
+            arquivoUrl = urlData.publicUrl;
+        }
+
+        const { data, error } = await supabase
+            .from('quadrinhos')
+            .insert([{ titulo, volume, arquivo_url: arquivoUrl }])
+            .select();
+
+        if (error) throw error;
+        return res.status(201).json({ success: true, hq: data[0] });
+    } catch (error) {
+        console.error("❌ Erro ao cadastrar HQ:", error);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ==========================================
+// NOVAS ROTAS DE GERENCIAMENTO (GET E DELETE)
+// ==========================================
+
+// Buscar Métricas do Dashboard Master
+app.get('/api/admin/metricas', async (req, res) => {
+    try {
+        const { count: totalAlunas } = await supabase.from('alunos').select('*', { count: 'exact', head: true });
+        const { count: totalCursos } = await supabase.from('cursos').select('*', { count: 'exact', head: true });
+        const { count: totalHqs } = await supabase.from('quadrinhos').select('*', { count: 'exact', head: true });
+        
+        return res.json({ totalAlunas: totalAlunas || 0, totalCursos: totalCursos || 0, totalHqs: totalHqs || 0 });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// Listar Alunos Cadastrados
+app.get('/api/admin/alunos', async (req, res) => {
+    const { data, error } = await supabase.from('alunos').select('nome, cpf').order('nome');
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
+});
+
+// Listar Cursos Cadastrados
+app.get('/api/admin/cursos', async (req, res) => {
+    const { data, error } = await supabase.from('cursos').select('id, titulo, descricao').order('titulo');
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
+});
+
+// Listar HQs Cadastradas
+app.get('/api/admin/hqs', async (req, res) => {
+    const { data, error } = await supabase.from('quadrinhos').select('id, titulo, volume').order('titulo');
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
+});
+
+// Deleções Diretas
+app.delete('/api/admin/alunos/:cpf', async (req, res) => {
+    const { error } = await supabase.from('alunos').delete().eq('cpf', req.params.cpf);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true });
+});
+
+app.delete('/api/admin/cursos/:id', async (req, res) => {
+    const { error } = await supabase.from('cursos').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true });
+});
+
+app.delete('/api/admin/hqs/:id', async (req, res) => {
+    const { error } = await supabase.from('quadrinhos').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true });
 });
 
 // Inicialização do Servidor

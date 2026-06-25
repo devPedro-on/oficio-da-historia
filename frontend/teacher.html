@@ -37,9 +37,33 @@
 
     <main class="max-w-4xl mx-auto px-6 py-8 space-y-8">
         
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-history-card border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                <div class="p-3 bg-blue-500/10 rounded-lg text-blue-400 text-xl">👥</div>
+                <div>
+                    <p class="text-xs text-history-textMuted font-semibold uppercase tracking-wider">Alunos Ativos</p>
+                    <h3 id="metric-alunos" class="text-2xl font-serif font-bold text-white">...</h3>
+                </div>
+            </div>
+            <div class="bg-history-card border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                <div class="p-3 bg-history-gold/10 rounded-lg text-history-gold text-xl">📚</div>
+                <div>
+                    <p class="text-xs text-history-textMuted font-semibold uppercase tracking-wider">Cursos Publicados</p>
+                    <h3 id="metric-cursos" class="text-2xl font-serif font-bold text-white">...</h3>
+                </div>
+            </div>
+            <div class="bg-history-card border border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-lg">
+                <div class="p-3 bg-purple-500/10 rounded-lg text-purple-400 text-xl">🗺️</div>
+                <div>
+                    <p class="text-xs text-history-textMuted font-semibold uppercase tracking-wider">Crônicas (HQs)</p>
+                    <h3 id="metric-hqs" class="text-2xl font-serif font-bold text-white">...</h3>
+                </div>
+            </div>
+        </div>
+
         <div id="status-message" class="hidden p-4 rounded-lg text-sm font-medium text-center"></div>
 
-        <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4">
+        <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
             <div class="border-b border-slate-800 pb-3">
                 <h2 class="text-xl font-serif font-bold text-history-gold">🔴 Gerenciar Aula Ao Vivo (Google Meet)</h2>
                 <p class="text-xs text-history-textMuted">Ative a transmissão e mude o link que aparece no painel dos alunos.</p>
@@ -67,13 +91,13 @@
                     <input type="text" id="liveDescription" value="A aula ao vivo já começou no Google Meet! Clique abaixo para entrar na sala." class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
                 </div>
 
-                <button type="submit" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
+                <button type="submit" id="live-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
                     🚀 Atualizar Transmissão
                 </button>
             </form>
         </section>
 
-        <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4">
+        <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
             <div class="border-b border-slate-800 pb-3">
                 <h2 class="text-xl font-serif font-bold text-history-gold">📜 Recrutamento de Novos Alunos</h2>
                 <p class="text-xs text-history-textMuted">Insira as credenciais para dar acesso imediato à plataforma pelo banco de dados.</p>
@@ -86,48 +110,320 @@
                         <input type="text" id="nomeAluno" placeholder="Ex: Alexandre Magno" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-history-textMuted uppercase">CPF (Apenas números)</label>
-                        <input type="text" id="cpfAluno" maxlength="11" placeholder="Ex: 12345678901" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">CPF do Aluno</label>
+                        <input type="text" id="cpfAluno" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white placeholder-slate-600 transition-colors" required>
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-semibold text-history-textMuted uppercase">Senha Inicial</label>
-                        <input type="password" id="senhaAluno" placeholder="Ex: 123456" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                        <div class="relative">
+                            <input type="password" id="senhaAluno" placeholder="Ex: 123456" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 pr-10 text-sm focus:outline-none focus:border-history-gold text-white placeholder-slate-600 transition-colors" required>
+                            <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-history-gold transition-colors select-none flex items-center justify-center">
+                                <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.5l-1-2.5M12 9V6M16 9.5l1-2.5M20 11l1.5-2" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
+                <button type="submit" id="cadastrar-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
                     ✒️ Selar Registro de Aluno
                 </button>
             </form>
         </section>
 
-        <section class="bg-history-card border border-slate-800 rounded-xl p-6 opacity-60">
-            <div class="border-b border-slate-800 pb-3">
-                <h2 class="text-xl font-serif font-bold text-slate-400">📚 Cadastrar Novo Curso ou HQ</h2>
-                <p class="text-xs text-history-textMuted">Os formulários abaixo serão conectados ao banco Supabase PostgreSQL na próxima etapa.</p>
-            </div>
-            <div class="pt-4 text-sm text-history-textMuted italic">
-                Painel preparado para receber os inputs de novos uploads...
-            </div>
-        </section>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
+                <div class="border-b border-slate-800 pb-3">
+                    <h2 class="text-xl font-serif font-bold text-history-gold">📚 Cadastrar Novo Curso</h2>
+                    <p class="text-xs text-history-textMuted">Disponibilize um novo módulo ou trilha de estudos acadêmica.</p>
+                </div>
+                
+                <form id="formCadastroCurso" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Título do Curso</label>
+                        <input type="text" id="tituloCurso" placeholder="Ex: Grécia Antiga: Filosofia e Pólis" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Descrição / Subtítulo</label>
+                        <textarea id="descricaoCurso" rows="3" placeholder="Uma análise profunda sobre o surgimento do pensamento racional..." class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white resize-none" required></textarea>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Imagem de Capa (PNG ou JPEG)</label>
+                        <input type="file" id="capaCurso" accept="image/png, image/jpeg" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-history-gold hover:file:bg-slate-700 file:cursor-pointer cursor-pointer bg-[#0B0F17] border border-slate-700 rounded-lg p-2" required>
+                    </div>
+
+                    <button type="submit" id="curso-btn" class="w-full bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
+                        🏛️ Publicar Curso Histórico
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
+                <div class="border-b border-slate-800 pb-3">
+                    <h2 class="text-xl font-serif font-bold text-history-gold">🗺️ Cadastrar Nova HQ</h2>
+                    <p class="text-xs text-history-textMuted">Adicione crônicas visuais e quadrinhos históricos à biblioteca.</p>
+                </div>
+                
+                <form id="formCadastroHQ" class="space-y-4">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-xs font-semibold text-history-textMuted uppercase">Título da HQ</label>
+                            <input type="text" id="tituloHQ" placeholder="Ex: Vinland Saga" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-history-textMuted uppercase">Vol / Edição</label>
+                            <input type="text" id="volumeHQ" placeholder="Ex: Vol. 01" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Arquivo da HQ (Apenas PDF)</label>
+                        <input type="file" id="arquivoHQ" accept="application/pdf" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-history-gold hover:file:bg-slate-700 file:cursor-pointer cursor-pointer bg-[#0B0F17] border border-slate-700 rounded-lg p-2" required>
+                    </div>
+
+                    <div class="hidden md:block pt-[42px]"></div>
+
+                    <button type="submit" id="hq-btn" class="w-full bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
+                        🎨 Lançar Crônica Visual
+                    </button>
+                </form>
+            </section>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl flex flex-col h-[420px]">
+                <div class="border-b border-slate-800 pb-3">
+                    <h2 class="text-lg font-serif font-bold text-white">📋 Alunos Matriculados</h2>
+                    <p class="text-xs text-history-textMuted">Visualize e controle as permissões de acesso dos alunos ativos.</p>
+                </div>
+                <div class="overflow-y-auto flex-1 pr-1 space-y-2 custom-scrollbar" id="lista-alunos-container">
+                    <div class="text-center text-xs text-history-textMuted italic pt-8">Carregando lista de alunos...</div>
+                </div>
+            </section>
+
+            <section class="bg-history-card border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl flex flex-col h-[420px]">
+                <div class="border-b border-slate-800 pb-2 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-serif font-bold text-white">🏛️ Acervo de Conteúdos</h2>
+                        <p class="text-xs text-history-textMuted">Gerencie os cursos e HQs publicados no banco.</p>
+                    </div>
+                    <div class="flex gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+                        <button id="tab-cursos" class="px-2.5 py-1 rounded bg-history-gold text-history-bg font-bold transition-all">Cursos</button>
+                        <button id="tab-hqs" class="px-2.5 py-1 rounded text-history-textMuted font-medium transition-all">HQs</button>
+                    </div>
+                </div>
+                
+                <div id="lista-cursos-container" class="overflow-y-auto flex-1 pr-1 space-y-2 custom-scrollbar">
+                    <div class="text-center text-xs text-history-textMuted italic pt-8">Carregando cursos...</div>
+                </div>
+                <div id="lista-hqs-container" class="overflow-y-auto flex-1 pr-1 space-y-2 custom-scrollbar hidden">
+                    <div class="text-center text-xs text-history-textMuted italic pt-8">Carregando crônicas visuais...</div>
+                </div>
+            </section>
+        </div>
 
     </main>
 
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+    </style>
+
     <script>
-        // 🛡️ GUARDA SÊNIOR: Bloqueia o acesso direto se a role não for 'teacher'
         if (localStorage.getItem('oficio_session_role') !== 'teacher') {
             window.location.href = 'login-professor.html';
         }
 
-        const API_LIVE_URL = "https://oficio-backend-jg09.onrender.com/api/teacher/live";
-        const API_CADASTRAR_URL = "https://oficio-backend-jg09.onrender.com/api/admin/cadastrar-aluno";
+        // Endpoints do Backend
+        const API_BASE = "https://oficio-backend-jg09.onrender.com/api";
+        const API_LIVE_URL = `${API_BASE}/teacher/live`;
+        const API_CADASTRAR_URL = `${API_BASE}/admin/cadastrar-aluno`;
+        const API_CURSO_URL = `${API_BASE}/admin/cadastrar-curso`;
+        const API_HQ_URL = `${API_BASE}/admin/cadastrar-hq`;
+        
+        // Novos Endpoints para listagem e remoção (Gerenciamento)
+        const API_METRICAS_URL = `${API_BASE}/admin/metricas`;
+        const API_LISTA_ALUNOS = `${API_BASE}/admin/alunos`;
+        const API_LISTA_CURSOS = `${API_BASE}/admin/cursos`;
+        const API_LISTA_HQS = `${API_BASE}/admin/hqs`;
 
         // ==========================================
-        // LÓGICA DO GERENCIAMENTO DE LIVE
+        // CONTROLES DE INTERFACE E MÁSCARAS
+        // ==========================================
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('senhaAluno');
+            const eyeOpen = document.getElementById('eye-open');
+            const eyeClosed = document.getElementById('eye-closed');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('cpfAluno').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            e.target.value = value;
+        });
+
+        // Alternância de Abas no Acervo
+        const tabCursos = document.getElementById('tab-cursos');
+        const tabHQs = document.getElementById('tab-hqs');
+        const containerCursos = document.getElementById('lista-cursos-container');
+        const containerHQs = document.getElementById('lista-hqs-container');
+
+        tabCursos.addEventListener('click', () => {
+            tabCursos.classList.add('bg-history-gold', 'text-history-bg', 'font-bold');
+            tabCursos.classList.remove('text-history-textMuted', 'font-medium');
+            tabHQs.classList.remove('bg-history-gold', 'text-history-bg', 'font-bold');
+            tabHQs.classList.add('text-history-textMuted', 'font-medium');
+            containerCursos.classList.remove('hidden');
+            containerHQs.classList.add('hidden');
+        });
+
+        tabHQs.addEventListener('click', () => {
+            tabHQs.classList.add('bg-history-gold', 'text-history-bg', 'font-bold');
+            tabHQs.classList.remove('text-history-textMuted', 'font-medium');
+            tabCursos.classList.remove('bg-history-gold', 'text-history-bg', 'font-bold');
+            tabCursos.classList.add('text-history-textMuted', 'font-medium');
+            containerHQs.classList.remove('hidden');
+            containerCursos.classList.add('hidden');
+        });
+
+        // ==========================================
+        // SINCRO/GET DE DADOS (MÉTRICAS E LISTAS)
+        // ==========================================
+        async function carregarDashboard() {
+            try {
+                // 1. Carrega Métricas
+                const resMetrics = await fetch(API_METRICAS_URL);
+                if (resMetrics.ok) {
+                    const metrics = await resMetrics.json();
+                    document.getElementById('metric-alunos').innerText = metrics.totalAlunas || 0;
+                    document.getElementById('metric-cursos').innerText = metrics.totalCursos || 0;
+                    document.getElementById('metric-hqs').innerText = metrics.totalHqs || 0;
+                }
+
+                // 2. Carrega Lista de Alunos
+                const resAlunos = await fetch(API_LISTA_ALUNOS);
+                const alunosContainer = document.getElementById('lista-alunos-container');
+                if (resAlunos.ok) {
+                    const alunos = await resAlunos.json();
+                    if(alunos.length === 0) {
+                        alunosContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhum aluno matriculado.</div>`;
+                    } else {
+                        alunosContainer.innerHTML = alunos.map(aluno => `
+                            <div class="flex justify-between items-center bg-[#0B0F17] border border-slate-800 p-3 rounded-lg text-sm">
+                                <div>
+                                    <h4 class="font-semibold text-slate-200">${aluno.nome}</h4>
+                                    <p class="text-xs text-history-textMuted font-mono">CPF: ${aluno.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
+                                </div>
+                                <button onclick="removerAluno('${aluno.cpf}', '${aluno.nome}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Excluir</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // 3. Carrega Lista de Cursos
+                const resCursos = await fetch(API_LISTA_CURSOS);
+                const cursosContainer = document.getElementById('lista-cursos-container');
+                if (resCursos.ok) {
+                    const cursos = await resCursos.json();
+                    if(cursos.length === 0) {
+                        cursosContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhum curso cadastrado.</div>`;
+                    } else {
+                        cursosContainer.innerHTML = cursos.map(curso => `
+                            <div class="flex justify-between items-center bg-[#0B0F17] border border-slate-800 p-3 rounded-lg text-sm">
+                                <div class="truncate max-w-[70%]">
+                                    <h4 class="font-semibold text-slate-200 truncate">${curso.titulo}</h4>
+                                    <p class="text-xs text-history-textMuted truncate">${curso.descricao || 'Sem descrição'}</p>
+                                </div>
+                                <button onclick="removerCurso('${curso.id}', '${curso.titulo}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // 4. Carrega Lista de HQs
+                const resHQs = await fetch(API_LISTA_HQS);
+                const hqsContainer = document.getElementById('lista-hqs-container');
+                if (resHQs.ok) {
+                    const hqs = await resHQs.json();
+                    if(hqs.length === 0) {
+                        hqsContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhuma HQ cadastrada.</div>`;
+                    } else {
+                        hqsContainer.innerHTML = hqs.map(hq => `
+                            <div class="flex justify-between items-center bg-[#0B0F17] border border-slate-800 p-3 rounded-lg text-sm">
+                                <div>
+                                    <h4 class="font-semibold text-slate-200">${hq.titulo}</h4>
+                                    <p class="text-xs text-history-gold font-medium">${hq.volume || 'Volume Único'}</p>
+                                </div>
+                                <button onclick="removerHQ('${hq.id}', '${hq.titulo}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+            } catch (err) {
+                console.error("Erro ao sincronizar painel master:", err);
+            }
+        }
+
+        // Executa ao abrir a página
+        window.addEventListener('DOMContentLoaded', carregarDashboard);
+
+        // Ações de Deleção/Exclusão
+        async function removerAluno(cpf, nome) {
+            if(!confirm(`Tem certeza que deseja revogar o acesso de ${nome}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/alunos/${cpf}`, { method: 'DELETE' });
+                if(res.ok) { showStatus(`Acesso de ${nome} removido.`, "success"); carregarDashboard(); }
+            } catch(e) { showStatus("Erro ao conectar com servidor.", "error"); }
+        }
+
+        async function removerCurso(id, titulo) {
+            if(!confirm(`Excluir permanentemente o curso: ${titulo}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/cursos/${id}`, { method: 'DELETE' });
+                if(res.ok) { showStatus(`Curso "${titulo}" removido com sucesso.`, "success"); carregarDashboard(); }
+            } catch(e) { showStatus("Erro ao deletar curso.", "error"); }
+        }
+
+        async function removerHQ(id, titulo) {
+            if(!confirm(`Excluir permanentemente a HQ: ${titulo}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/hqs/${id}`, { method: 'DELETE' });
+                if(res.ok) { showStatus(`HQ "${titulo}" removida com sucesso.`, "success"); carregarDashboard(); }
+            } catch(e) { showStatus("Erro ao deletar HQ.", "error"); }
+        }
+
+        // ==========================================
+        // SUBMITS E REQUISIÇÕES (POSTS)
         // ==========================================
         document.getElementById('live-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            const btn = document.getElementById('live-btn');
+            btn.innerText = "🚀 Atualizando...";
+            btn.disabled = true;
+
             const payload = {
                 isLive: document.getElementById('isLive').checked,
                 title: document.getElementById('liveTitle').value,
@@ -141,35 +437,31 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 const data = await response.json();
-
-                if (data.success) {
-                    showStatus("Painel atualizado com sucesso! Os alunos já conseguem ver as alterações.", "success");
-                } else {
-                    showStatus("Erro ao atualizar o painel.", "error");
-                }
+                if (data.success) showStatus("Painel atualizado com sucesso!", "success");
+                else showStatus("Erro ao atualizar o painel.", "error");
             } catch (error) {
-                console.error("Erro na requisição:", error);
                 showStatus("Não foi possível conectar ao servidor backend.", "error");
+            } finally {
+                btn.innerText = "🚀 Atualizar Transmissão";
+                btn.disabled = false;
             }
         });
 
-        // ==========================================
-        // LÓGICA DO CADASTRO DE ALUNOS (NOVO)
-        // ==========================================
         document.getElementById('formCadastroAluno').addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            const btn = document.getElementById('cadastrar-btn');
             const nome = document.getElementById('nomeAluno').value.trim();
-            const cpf = document.getElementById('cpfAluno').value.trim();
+            const cpf = document.getElementById('cpfAluno').value.replace(/\D/g, "");
             const senha = document.getElementById('senhaAluno').value;
 
-            // Validação de tamanho básico de CPF no Front antes de disparar a API
             if (cpf.length !== 11 || isNaN(cpf)) {
                 showStatus("O CPF deve conter exatamente 11 dígitos numéricos.", "error");
                 return;
             }
+
+            btn.innerText = "✒️ Registrando...";
+            btn.disabled = true;
 
             try {
                 const response = await fetch(API_CADASTRAR_URL, {
@@ -177,33 +469,90 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, cpf, senha })
                 });
-
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showStatus(`🏛️ ${nome} foi matriculado com sucesso no Ofício da História!`, "success");
+                    showStatus(`🏛️ ${nome} foi matriculado com sucesso!`, "success");
                     document.getElementById('formCadastroAluno').reset();
+                    carregarDashboard();
                 } else {
-                    // Exibe a mensagem tratada da API (ex: CPF duplicado)
                     showStatus(`⚠️ ${data.error || 'Erro ao realizar o cadastro.'}`, "error");
                 }
             } catch (error) {
-                console.error("Erro na requisição de cadastro:", error);
                 showStatus("Não foi possível conectar ao servidor para matricular o aluno.", "error");
+            } finally {
+                btn.innerText = "✒️ Selar Registro de Aluno";
+                btn.disabled = false;
             }
         });
 
-        // FUNÇÃO GLOBAL DE FEEDBACK VISUAL
+        document.getElementById('formCadastroCurso').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('curso-btn');
+            btn.innerText = "🏛️ Publicando...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('titulo', document.getElementById('tituloCurso').value.trim());
+            formData.append('descricao', document.getElementById('descricaoCurso').value.trim());
+            formData.append('capa', document.getElementById('capaCurso').files[0]);
+
+            try {
+                const response = await fetch(API_CURSO_URL, { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showStatus("📜 Novo curso estruturado e publicado com sucesso!", "success");
+                    document.getElementById('formCadastroCurso').reset();
+                    carregarDashboard();
+                } else {
+                    showStatus(`⚠️ ${data.error || 'Erro ao cadastrar curso.'}`, "error");
+                }
+            } catch (error) {
+                showStatus("Não foi possível conectar ao servidor para cadastrar o curso.", "error");
+            } finally {
+                btn.innerText = "🏛️ Publicar Curso Histórico";
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('formCadastroHQ').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('hq-btn');
+            btn.innerText = "🎨 Lançando...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('titulo', document.getElementById('tituloHQ').value.trim());
+            formData.append('volume', document.getElementById('volumeHQ').value.trim());
+            formData.append('arquivo', document.getElementById('arquivoHQ').files[0]);
+
+            try {
+                const response = await fetch(API_HQ_URL, { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showStatus("🗺️ Crônica visual adicionada com sucesso ao catálogo!", "success");
+                    document.getElementById('formCadastroHQ').reset();
+                    carregarDashboard();
+                } else {
+                    showStatus(`⚠️ ${data.error || 'Erro ao cadastrar HQ.'}`, "error");
+                }
+            } catch (error) {
+                showStatus("Não foi possível conectar ao servidor para cadastrar a HQ.", "error");
+            } finally {
+                btn.innerText = "🎨 Lançar Crônica Visual";
+                btn.disabled = false;
+            }
+        });
+
         function showStatus(message, type) {
             const el = document.getElementById('status-message');
             el.innerText = message;
             el.classList.remove('hidden', 'bg-green-950/80', 'text-green-400', 'border-green-500/30', 'bg-red-950/80', 'text-red-400', 'border-red-500/30');
             
-            if (type === "success") {
-                el.classList.add('bg-green-950/80', 'text-green-400', 'border', 'border-green-500/30');
-            } else {
-                el.classList.add('bg-red-950/80', 'text-red-400', 'border', 'border-red-500/30');
-            }
+            if (type === "success") el.classList.add('bg-green-950/80', 'text-green-400', 'border', 'border-green-500/30');
+            else el.classList.add('bg-red-950/80', 'text-red-400', 'border', 'border-red-500/30');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
