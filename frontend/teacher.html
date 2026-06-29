@@ -399,7 +399,7 @@
                 
                 if(res.ok) { 
                     showStatus(`Acesso de ${nome} removido.`, "success"); 
-                    carregarDashboard(); // Recarrega a lista na tela na mesma hora
+                    carregarDashboard(); // <-- Adicionado o ponto e vírgula aqui!
                 } else {
                     showStatus("Erro ao remover aluno do banco de dados.", "error");
                 }
