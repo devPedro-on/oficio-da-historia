@@ -30,7 +30,7 @@ let liveState = {
 };
 
 // ==========================================
-// SUAS ROTAS ORIGINAIS (INTACTAS)
+// SUAS ROTAS ORIGINAIS (CORRIGIDAS PARA O SCHEMA)
 // ==========================================
 
 // Rota de Cadastro de Aluno
@@ -94,30 +94,27 @@ app.post('/api/teacher/live', (req, res) => {
     return res.json({ success: true, liveSession: liveState });
 });
 
-// Rota de Cadastro de Curso (Suporta arquivo binário da Capa)
+// Rota de Cadastro de Curso (Corrigida para coluna 'title')
 app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) => {
     try {
-        const { titulo, descricao } = req.body;
-        let capaUrl = "";
+        const { titulo } = req.body; 
 
+        // Como não há coluna de imagem/cover no seu schema de cursos atualmente, salvamos apenas o title.
+        // Se decidir adicionar coluna de capa depois, a lógica de upload do Multer está pronta abaixo.
+        /*
+        let capaUrl = "";
         if (req.file) {
             const fileExt = req.file.originalname.split('.').pop();
             const fileName = `${Date.now()}.${fileExt}`;
-            
-            // Upload para o Bucket público 'capas-cursos' no Supabase Storage
-            const { error: storageError } = await supabase.storage
-                .from('capas-cursos')
-                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-            if (storageError) throw storageError;
-
+            await supabase.storage.from('capas-cursos').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
             const { data: urlData } = supabase.storage.from('capas-cursos').getPublicUrl(fileName);
             capaUrl = urlData.publicUrl;
         }
+        */
 
         const { data, error } = await supabase
             .from('cursos')
-            .insert([{ titulo, descricao, imagem: capaUrl }])
+            .insert([{ title: titulo }]) // 'title' bate com o banco
             .select();
 
         if (error) throw error;
@@ -128,16 +125,15 @@ app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) =
     }
 });
 
-// Rota de Cadastro de HQ (Suporta arquivo binário do PDF)
+// Rota de Cadastro de HQ (Corrigida para colunas 'title' e 'cover')
 app.post('/api/admin/cadastrar-hq', upload.single('arquivo'), async (req, res) => {
     try {
-        const { titulo, volume } = req.body;
+        const { titulo } = req.body;
         let arquivoUrl = "";
 
         if (req.file) {
             const fileName = `${Date.now()}.pdf`;
             
-            // Upload para o Bucket público 'arquivos-hqs' no Supabase Storage
             const { error: storageError } = await supabase.storage
                 .from('arquivos-hqs')
                 .upload(fileName, req.file.buffer, { contentType: 'application/pdf' });
@@ -150,7 +146,7 @@ app.post('/api/admin/cadastrar-hq', upload.single('arquivo'), async (req, res) =
 
         const { data, error } = await supabase
             .from('quadrinhos')
-            .insert([{ titulo, volume, arquivo_url: arquivoUrl }])
+            .insert([{ title: titulo, cover: arquivoUrl }]) // 'title' e 'cover' batem com o banco
             .select();
 
         if (error) throw error;
@@ -186,16 +182,16 @@ app.get('/api/admin/alunos', async (req, res) => {
     return res.json(data);
 });
 
-// Listar Cursos Cadastrados
+// Listar Cursos Cadastrados (Corrigido para 'title')
 app.get('/api/admin/cursos', async (req, res) => {
-    const { data, error } = await supabase.from('cursos').select('id, titulo, descricao').order('titulo');
+    const { data, error } = await supabase.from('cursos').select('id, title').order('title');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
 
-// Listar HQs Cadastradas
+// Listar HQs Cadastradas (Corrigido para 'title')
 app.get('/api/admin/hqs', async (req, res) => {
-    const { data, error } = await supabase.from('quadrinhos').select('id, titulo, volume').order('titulo');
+    const { data, error } = await supabase.from('quadrinhos').select('id, title, cover').order('title');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
