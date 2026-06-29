@@ -394,9 +394,18 @@
         async function removerAluno(cpf, nome) {
             if(!confirm(`Tem certeza que deseja revogar o acesso de ${nome}?`)) return;
             try {
-                const res = await fetch(`${API_BASE}/admin/alunos/${cpf}`, { method: 'DELETE' });
-                if(res.ok) { showStatus(`Acesso de ${nome} removido.`, "success"); carregarDashboard(); }
-            } catch(e) { showStatus("Erro ao conectar com servidor.", "error"); }
+                // CORREÇÃO: Adicionado /api logo após o API_BASE para bater com o server.js
+                const res = await fetch(`${API_BASE}/api/admin/alunos/${cpf}`, { method: 'DELETE' });
+                
+                if(res.ok) { 
+                    showStatus(`Acesso de ${nome} removido.`, "success"); 
+                    carregarDashboard(); // Recarrega a lista na tela na mesma hora
+                } else {
+                    showStatus("Erro ao remover aluno do banco de dados.", "error");
+                }
+            } catch(e) { 
+                showStatus("Erro ao conectar com servidor.", "error"); 
+            }
         }
 
         async function removerCurso(id, titulo) {
