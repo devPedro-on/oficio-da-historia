@@ -399,8 +399,8 @@
         async function removerAluno(cpf, nome) {
             if(!confirm(`Tem certeza que deseja revogar o acesso de ${nome}?`)) return;
             try {
-                // CORREÇÃO: Adicionado /api logo após o API_BASE para bater com o server.js
-                const res = await fetch(`${API_BASE}/api/admin/alunos/${cpf}`, { method: 'DELETE' });
+                // Ajustado para usar o API_BASE correto sem duplicar o /api e limpando o caminho
+                const res = await fetch(`${API_BASE}/admin/alunos/${cpf}`, { method: 'DELETE' });
                 
                 if(res.ok) { 
                     showStatus(`Acesso de ${nome} removido.`, "success"); 
