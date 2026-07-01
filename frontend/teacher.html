@@ -189,6 +189,11 @@
                         <input type="file" id="arquivoHQ" accept="application/pdf" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-history-gold hover:file:bg-slate-700 file:cursor-pointer cursor-pointer bg-[#0B0F17] border border-slate-700 rounded-lg p-2" required>
                     </div>
 
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-history-textMuted uppercase">Capa da Crônica (PNG ou JPEG)</label>
+                        <input type="file" id="capaHQ" accept="image/png, image/jpeg" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-history-gold hover:file:bg-slate-700 file:cursor-pointer cursor-pointer bg-[#0B0F17] border border-slate-700 rounded-lg p-2" required>
+                    </div>
+
                     <div class="hidden md:block pt-[42px]"></div>
 
                     <button type="submit" id="hq-btn" class="w-full bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg text-sm transition-all duration-200">
@@ -399,7 +404,7 @@
                 
                 if(res.ok) { 
                     showStatus(`Acesso de ${nome} removido.`, "success"); 
-                    carregarDashboard(); // <-- Adicionado o ponto e vírgula aqui!
+                    carregarDashboard();
                 } else {
                     showStatus("Erro ao remover aluno do banco de dados.", "error");
                 }
@@ -535,13 +540,16 @@
             formData.append('titulo', document.getElementById('tituloHQ').value.trim());
             formData.append('volume', document.getElementById('volumeHQ').value.trim());
             formData.append('arquivo', document.getElementById('arquivoHQ').files[0]);
+            
+            // 🚀 CAPTURA DA CAPA ADICIONADA AQUI:
+            formData.append('capa', document.getElementById('capaHQ').files[0]); 
 
             try {
                 const response = await fetch(API_HQ_URL, { method: 'POST', body: formData });
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showStatus("🗺️ Crônica visual adicionada com sucesso ao catálogo!", "success");
+                    showStatus("🗺️ Nova crônica visual adicionada ao acervo com capa!", "success");
                     document.getElementById('formCadastroHQ').reset();
                     carregarDashboard();
                 } else {

@@ -126,17 +126,23 @@ app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) =
 });
 
 // Rota de Cadastro de HQ (Corrigida para colunas 'title' e 'cover')
-app.post('/api/admin/cadastrar-hq', upload.single('arquivo'), async (req, res) => {
+app.post('/api/admin/cadastrar-hq', upload.fields([
+    { name: 'arquivo', maxCount: 1 },
+    { name: 'capa', maxCount: 1 }
+]), async (req, res) => {
     try {
-        const { titulo } = req.body;
+        const { titulo, volume } = req.body; // Pegando título e volume do front-end
         let arquivoUrl = "";
+        let capaUrl = "";
 
-        if (req.file) {
-            const fileName = `${Date.now()}.pdf`;
-            
+        // 1. Upload do Arquivo PDF
+        if (req.files && req.files['arquivo']) {
+            const arquivoFile = req.files['arquivo'][0];
+            const fileName = `${Date.now()}_pdf.pdf`;
+
             const { error: storageError } = await supabase.storage
                 .from('arquivos-hqs')
-                .upload(fileName, req.file.buffer, { contentType: 'application/pdf' });
+                .upload(fileName, arquivoFile.buffer, { contentType: 'application/pdf' });
 
             if (storageError) throw storageError;
 
@@ -144,13 +150,36 @@ app.post('/api/admin/cadastrar-hq', upload.single('arquivo'), async (req, res) =
             arquivoUrl = urlData.publicUrl;
         }
 
+        // 2. Upload da Imagem da Capa
+        if (req.files && req.files['capa']) {
+            const capaFile = req.files['capa'][0];
+            const ext = capaFile.originalname.split('.').pop(); // Pega a extensão original (png, jpg, etc)
+            const fileName = `${Date.now()}_capa.${ext}`;
+
+            const { error: storageError } = await supabase.storage
+                .from('arquivos-hqs') // Se tiver um bucket só para capas, mude o nome aqui
+                .upload(fileName, capaFile.buffer, { contentType: capaFile.mimetype });
+
+            if (storageError) throw storageError;
+
+            const { data: urlData } = supabase.storage.from('arquivos-hqs').getPublicUrl(fileName);
+            capaUrl = urlData.publicUrl;
+        }
+
+        // 3. Inserção no Banco de Dados
         const { data, error } = await supabase
             .from('quadrinhos')
-            .insert([{ title: titulo, cover: arquivoUrl }]) // 'title' e 'cover' batem com o banco
+            .insert([{ 
+                title: titulo, 
+                volume: volume,       
+                cover: capaUrl,       
+                pdf_url: arquivoUrl   
+            }])
             .select();
 
         if (error) throw error;
         return res.status(201).json({ success: true, hq: data[0] });
+
     } catch (error) {
         console.error("❌ Erro ao cadastrar HQ:", error);
         return res.status(500).json({ error: error.message });
