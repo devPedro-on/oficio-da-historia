@@ -206,7 +206,7 @@ app.get('/api/admin/metricas', async (req, res) => {
 
 // Listar Alunos Cadastrados
 app.get('/api/admin/alunos', async (req, res) => {
-    const { data, error } = await supabase.from('alunos').select('nome, cpf').order('nome');
+    const { data, error } = await supabase.from('alunos').select('id, nome, cpf').order('nome');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
@@ -226,30 +226,23 @@ app.get('/api/admin/hqs', async (req, res) => {
 });
 
 // Deleções Diretas (Corrigida para ignorar pontos e hífens)
-app.delete('/api/admin/alunos/:cpf', async (req, res) => {
-    const cpfRecebido = req.params.cpf;
-    
+app.delete('/api/admin/alunos/:id', async (req, res) => {
+    const idRecebido = req.params.id;
     try {
-        const cpfLimpo = cpfRecebido.replace(/\D/g, "");
-        
-        // Cria um padrão de busca que ignora os separadores (ex: %019%270%530%05%)
-        const padraoBusca = `%${cpfLimpo.split('').join('%')}%`;
+        console.log(` Tentando deletar aluno pelo ID único: ${idRecebido}`);
 
-        console.log(`[ILIKES] Buscando aluno que contenha a sequência numérica no CPF...`);
-
-        // Executa a deleção usando ilike de forma abrangente
         const { data, error } = await supabase
             .from('alunos')
             .delete()
-            .or(`cpf.ilike.${padraoBusca},cpf.ilike.%${cpfLimpo}%,cpf.ilike.%${cpfRecebido}%`)
+            .eq('id', idRecebido)
             .select();
 
         if (error) throw error;
 
-        console.log("Resultado da deleção no Supabase:", data);
+        console.log("Resultado da deleção por ID:", data);
         return res.json({ success: true, deletado: data });
     } catch (error) {
-        console.error("❌ Erro ao deletar aluno:", error.message);
+        console.error("❌ Erro ao deletar aluno por ID:", error.message);
         return res.status(500).json({ error: error.message });
     }
 });

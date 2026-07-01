@@ -341,7 +341,7 @@
                                     <h4 class="font-semibold text-slate-200">${aluno.nome}</h4>
                                     <p class="text-xs text-history-textMuted font-mono">CPF: ${aluno.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
                                 </div>
-                                <button onclick="removerAluno('${aluno.cpf}', '${aluno.nome}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Excluir</button>
+                                <button onclick="removerAluno('${aluno.id}', '${aluno.nome}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Excluir</button>
                             </div>
                         `).join('');
                     }
@@ -396,15 +396,17 @@
         window.addEventListener('DOMContentLoaded', carregarDashboard);
 
         // Ações de Deleção/Exclusão
-        async function removerAluno(cpf, nome) {
+        async function removerAluno(id, nome) {
             if(!confirm(`Tem certeza que deseja revogar o acesso de ${nome}?`)) return;
             try {
-                // Ajustado para usar o API_BASE correto sem duplicar o /api e limpando o caminho
-                const res = await fetch(`${API_BASE}/admin/alunos/${cpf}`, { method: 'DELETE' });
+                // Agora envia o ID na URL para o servidor
+                const res = await fetch(`${API_BASE}/admin/alunos/${id}`, { method: 'DELETE' });
                 
                 if(res.ok) { 
                     showStatus(`Acesso de ${nome} removido.`, "success"); 
-                    carregarDashboard();
+                    setTimeout(() => {
+                        carregarDashboard();
+                    }, 300);
                 } else {
                     showStatus("Erro ao remover aluno do banco de dados.", "error");
                 }
