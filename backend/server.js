@@ -227,22 +227,34 @@ app.get('/api/admin/hqs', async (req, res) => {
 
 // Deleções Diretas (Corrigida para ignorar pontos e hífens)
 app.delete('/api/admin/alunos/:cpf', async (req, res) => {
+    const cpfRecebido = req.params.cpf;
+    console.log("=== INÍCIO DA TENTATIVA DE EXCLUSÃO ===");
+    console.log("-> CPF recebido da URL:", cpfRecebido);
+    
     try {
-        // 1. Pega o CPF enviado e remove tudo que não for número (ex: 12345678900)
-        const cpfLimpo = req.params.cpf.replace(/\D/g, "");
+        // Tenta remover limpando
+        const cpfLimpo = cpfRecebido.replace(/\D/g, "");
+        console.log("-> CPF após limpeza (apenas números):", cpfLimpo);
 
-        // 2. Tenta deletar buscando pelo CPF limpo (apenas números)
-        let { error } = await supabase.from('alunos').delete().eq('cpf', cpfLimpo);
-        
-        if (error) throw error;
+        // Executa no Supabase e captura o retorno completo de linhas afetadas
+        const { data, error, count } = await supabase
+            .from('alunos')
+            .delete()
+            .or(`cpf.eq.${cpfLimpo},cpf.eq.${cpfRecebido}`)
+            .select(); // O .select() nos permite ver se algum registro veio no retorno
 
-        // 3. Se o seu banco usa pontos/hífen, vamos tentar deletar formatado também só por garantia
-        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        await supabase.from('alunos').delete().eq('cpf', cpfFormatado);
+        if (error) {
+            console.error("❌ Erro retornado pelo Supabase:", error.message);
+            return res.status(500).json({ error: error.message });
+        }
 
-        return res.json({ success: true });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.log("-> Dados retornados após o delete (vazio significa que não achou):", data);
+        console.log("=== FIM DA REQUISIÇÃO ===");
+
+        return res.json({ success: true, deletado: data });
+    } catch (err) {
+        console.error("❌ Erro interno na rota:", err.message);
+        return res.status(500).json({ error: err.message });
     }
 });
 
