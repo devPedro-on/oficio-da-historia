@@ -225,23 +225,25 @@ app.get('/api/admin/hqs', async (req, res) => {
     return res.json(data);
 });
 
-// Deleções Diretas
+// Deleções Diretas (Corrigida para ignorar pontos e hífens)
 app.delete('/api/admin/alunos/:cpf', async (req, res) => {
-    const { error } = await supabase.from('alunos').delete().eq('cpf', req.params.cpf);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ success: true });
-});
+    try {
+        // 1. Pega o CPF enviado e remove tudo que não for número (ex: 12345678900)
+        const cpfLimpo = req.params.cpf.replace(/\D/g, "");
 
-app.delete('/api/admin/cursos/:id', async (req, res) => {
-    const { error } = await supabase.from('cursos').delete().eq('id', req.params.id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ success: true });
-});
+        // 2. Tenta deletar buscando pelo CPF limpo (apenas números)
+        let { error } = await supabase.from('alunos').delete().eq('cpf', cpfLimpo);
+        
+        if (error) throw error;
 
-app.delete('/api/admin/hqs/:id', async (req, res) => {
-    const { error } = await supabase.from('quadrinhos').delete().eq('id', req.params.id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ success: true });
+        // 3. Se o seu banco usa pontos/hífen, vamos tentar deletar formatado também só por garantia
+        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        await supabase.from('alunos').delete().eq('cpf', cpfFormatado);
+
+        return res.json({ success: true });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
 });
 
 // Inicialização do Servidor
