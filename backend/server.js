@@ -230,17 +230,18 @@ app.delete('/api/admin/alunos/:cpf', async (req, res) => {
     const cpfRecebido = req.params.cpf;
     
     try {
-        // 1. Gera as duas versões possíveis para comparação
         const cpfLimpo = cpfRecebido.replace(/\D/g, "");
-        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        
+        // Cria um padrão de busca que ignora os separadores (ex: %019%270%530%05%)
+        const padraoBusca = `%${cpfLimpo.split('').join('%')}%`;
 
-        console.log(`Tentando deletar aluno. Buscando por: "${cpfLimpo}" ou "${cpfFormatado}"`);
+        console.log(`[ILIKES] Buscando aluno que contenha a sequência numérica no CPF...`);
 
-        // 2. Executa a deleção comparando com ambas as versões no banco
+        // Executa a deleção usando ilike de forma abrangente
         const { data, error } = await supabase
             .from('alunos')
             .delete()
-            .or(`cpf.eq.${cpfLimpo},cpf.eq.${cpfFormatado},cpf.eq.${cpfRecebido}`)
+            .or(`cpf.ilike.${padraoBusca},cpf.ilike.%${cpfLimpo}%,cpf.ilike.%${cpfRecebido}%`)
             .select();
 
         if (error) throw error;
