@@ -228,33 +228,28 @@ app.get('/api/admin/hqs', async (req, res) => {
 // Deleções Diretas (Corrigida para ignorar pontos e hífens)
 app.delete('/api/admin/alunos/:cpf', async (req, res) => {
     const cpfRecebido = req.params.cpf;
-    console.log("=== INÍCIO DA TENTATIVA DE EXCLUSÃO ===");
-    console.log("-> CPF recebido da URL:", cpfRecebido);
     
     try {
-        // Tenta remover limpando
+        // 1. Gera as duas versões possíveis para comparação
         const cpfLimpo = cpfRecebido.replace(/\D/g, "");
-        console.log("-> CPF após limpeza (apenas números):", cpfLimpo);
+        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 
-        // Executa no Supabase e captura o retorno completo de linhas afetadas
-        const { data, error, count } = await supabase
+        console.log(`Tentando deletar aluno. Buscando por: "${cpfLimpo}" ou "${cpfFormatado}"`);
+
+        // 2. Executa a deleção comparando com ambas as versões no banco
+        const { data, error } = await supabase
             .from('alunos')
             .delete()
-            .or(`cpf.eq.${cpfLimpo},cpf.eq.${cpfRecebido}`)
-            .select(); // O .select() nos permite ver se algum registro veio no retorno
+            .or(`cpf.eq.${cpfLimpo},cpf.eq.${cpfFormatado},cpf.eq.${cpfRecebido}`)
+            .select();
 
-        if (error) {
-            console.error("❌ Erro retornado pelo Supabase:", error.message);
-            return res.status(500).json({ error: error.message });
-        }
+        if (error) throw error;
 
-        console.log("-> Dados retornados após o delete (vazio significa que não achou):", data);
-        console.log("=== FIM DA REQUISIÇÃO ===");
-
+        console.log("Resultado da deleção no Supabase:", data);
         return res.json({ success: true, deletado: data });
-    } catch (err) {
-        console.error("❌ Erro interno na rota:", err.message);
-        return res.status(500).json({ error: err.message });
+    } catch (error) {
+        console.error("❌ Erro ao deletar aluno:", error.message);
+        return res.status(500).json({ error: error.message });
     }
 });
 
