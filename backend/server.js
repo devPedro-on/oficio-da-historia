@@ -60,33 +60,17 @@ app.get('/api/dashboard', async (req, res) => {
     try {
         // 1. Busca os Cursos
         const { data: courses, error: coursesError } = await supabase.from('cursos').select('*');
-        if (coursesError) {
-            console.error("❌ Erro na tabela 'cursos':", coursesError);
-            throw coursesError;
-        }
+        if (coursesError) throw coursesError;
 
         // 2. Busca os Quadrinhos
         const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
-        if (comicsError) {
-            console.error("❌ Erro na tabela 'quadrinhos':", comicsError);
-            throw comicsError;
-        }
+        if (comicsError) throw comicsError;
 
-        // 3. Busca o estado real da Live salvo no banco
-        const { data: liveData, error: liveError } = await supabase
-            .from('configuracoes')
-            .select('*')
-            .eq('id', 1)
-            .single();
-        
-        if (!liveError && liveData) {
-            // Mapeia os dados do banco de volta para o formato esperado pelo front-end do aluno
-            liveState = {
-                isLive: liveData.is_live,
-                title: liveData.title,
-                description: liveData.description,
-                meetUrl: liveData.meet_url
-            };
+        // Plano B: Pega o estado da live diretamente de dentro do primeiro curso encontrado
+        if (courses && courses.length > 0) {
+            liveState.isLive = courses[0].is_live;
+            // Se precisar que o título/descrição mude dinamicamente, você também pode criar
+            // colunas para eles no curso, ou manter as variáveis padrão do seu front.
         }
 
         return res.json({
@@ -96,8 +80,8 @@ app.get('/api/dashboard', async (req, res) => {
             comics: comics || []
         });
     } catch (error) {
-        console.error("💥 Erro fatal no endpoint /api/dashboard:", error.message || error);
-        return res.status(500).json({ error: 'Erro ao carregar dashboard', details: error.message });
+        console.error("❌ Erro no dashboard do aluno:", error.message);
+        return res.status(500).json({ error: 'Erro ao carregar dashboard' });
     }
 });
 
@@ -105,39 +89,34 @@ app.get('/api/dashboard', async (req, res) => {
 // NOVAS ROTAS ADMINISTRATIVAS (POST COM MULTER)
 // ==========================================
 
+
+// Atualizar Aula Ao Vivo (Salvando na tabela Cursos - Plano B)
 app.post('/api/teacher/live', async (req, res) => {
-    // 1. Captura as variáveis enviadas pelo front-end
     const { isLive, title, description, meetUrl } = req.body;
     
     try {
-        console.log("Dados recebidos para atualizar a live:", { isLive, title, description, meetUrl });
+        console.log("Plano B - Atualizando status na tabela 'cursos':", isLive);
 
-        // 2. Envia para o Supabase mapeando corretamente para o nome das colunas físicas
+        // Atualiza a coluna is_live dentro do curso com ID 1
         const { data, error } = await supabase
-            .from('configuracoes')
+            .from('cursos')
             .update({ 
-                is_live: isLive,       // mapeia isLive para is_live
-                title: title,           // mapeia title para title
-                description: description, // mapeia description para description
-                meet_url: meetUrl       // mapeia meetUrl para meet_url
+                is_live: isLive
+                // Nota: se o título e descrição da live forem sempre fixos ou gerenciados pelo front,
+                // você pode salvar apenas o status do checkbox aqui.
             })
             .eq('id', 1)
             .select();
 
-        if (error) {
-            console.error("Erro retornado pelo Supabase:", error.message);
-            throw error;
-        }
+        if (error) throw error;
 
-        console.log("Banco atualizado com sucesso. Retorno:", data);
-
-        // 3. Atualiza a variável local de memória para o painel
+        // Atualiza a memória local para entrega imediata ao front-end
         liveState = { isLive, title, description, meetUrl };
 
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
-        console.error("❌ Erro ao atualizar status da live:", error.message);
-        return res.status(500).json({ success: false, error: 'Erro ao salvar no banco' });
+        console.error("❌ Erro no Plano B ao atualizar status:", error.message);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
