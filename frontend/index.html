@@ -129,11 +129,12 @@
                     document.getElementById('comics-container').innerHTML = data.comics.map(hq => {
                         const titulo = hq.title || hq.nome || hq.titulo || "Sem título";
                         const capa = hq.cover || hq.capa || "https://via.placeholder.com/150";
-                        return `
-                            <div class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold">
-                                <img src="${capa}" class="rounded-lg mb-2 w-full object-cover aspect-[3/4]" alt="${titulo}">
-                                <h5 class="text-sm font-bold">${titulo}</h5>
-                            </div>`;
+                        const linkPdf = hq.pdf || hq.link || "#"; // Pega o link do PDF vindo do banco
+                            return `
+                                <a href="${linkPdf}" target="_blank" rel="noopener noreferrer" class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold block transition-colors">
+                                    <img src="${capa}" class="rounded-lg mb-2 w-full object-cover aspect-[3/4]" alt="${titulo}">
+                                    <h5 class="text-sm font-bold">${titulo}</h5>
+                                </a>`;
                     }).join('');
                 } else {
                     document.getElementById('comics-container').innerHTML = `<p class="text-history-textMuted text-sm">Nenhum quadrinho encontrado.</p>`;
