@@ -71,7 +71,7 @@
             
             <form id="live-form" class="space-y-4">
                 <div class="flex items-center gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                    <input type="checkbox" id="isLive" class="w-4 h-4 accent-history-gold cursor-pointer" checked>
+                    <input type="checkbox" id="isLive" class="w-4 h-4 accent-history-gold cursor-pointer">
                     <label for="isLive" class="text-sm font-medium cursor-pointer">Transmitir Aula Ao Vivo Agora (Exibir banner para alunos)</label>
                 </div>
 
@@ -313,7 +313,7 @@
             containerCursos.classList.add('hidden');
         });
 
-        // ==========================================
+// ==========================================
         // SINCRO/GET DE DADOS (MÉTRICAS E LISTAS)
         // ==========================================
         async function carregarDashboard() {
@@ -332,7 +332,7 @@
                 const alunosContainer = document.getElementById('lista-alunos-container');
                 if (resAlunos.ok) {
                     const alunos = await resAlunos.json();
-                    if(alunos.length === 0) {
+                    if (alunos.length === 0) {
                         alunosContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhum aluno matriculado.</div>`;
                     } else {
                         alunosContainer.innerHTML = alunos.map(aluno => `
@@ -347,12 +347,34 @@
                     }
                 }
 
-                // 3. Carrega Lista de Cursos
+                // 3. Carrega o estado atual da Transmissão / Live
+                const resLive = await fetch('/api/dashboard');
+                if (resLive.ok) {
+                    const dataLive = await resLive.json();
+                    
+                    if (dataLive.success && dataLive.liveSession) {
+                        const checkbox = document.getElementById('isLive');
+                        if (checkbox) {
+                            // Sincroniza visualmente o checkbox com o banco de dados
+                            checkbox.checked = dataLive.liveSession.isLive;
+                        }
+                        
+                        // Preenche os campos para não ter que redigitar o link/título
+                        if (document.getElementById('liveTitle')) 
+                            document.getElementById('liveTitle').value = dataLive.liveSession.title || '';
+                        if (document.getElementById('liveDescription')) 
+                            document.getElementById('liveDescription').value = dataLive.liveSession.description || '';
+                        if (document.getElementById('meetUrl')) 
+                            document.getElementById('meetUrl').value = dataLive.liveSession.meetUrl || '';
+                    }
+                }
+
+                // 4. Carrega Lista de Cursos
                 const resCursos = await fetch(API_LISTA_CURSOS);
                 const cursosContainer = document.getElementById('lista-cursos-container');
                 if (resCursos.ok) {
                     const cursos = await resCursos.json();
-                    if(cursos.length === 0) {
+                    if (cursos.length === 0) {
                         cursosContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhum curso cadastrado.</div>`;
                     } else {
                         cursosContainer.innerHTML = cursos.map(curso => `
@@ -367,12 +389,12 @@
                     }
                 }
 
-                // 4. Carrega Lista de HQs
+                // 5. Carrega Lista de HQs
                 const resHQs = await fetch(API_LISTA_HQS);
                 const hqsContainer = document.getElementById('lista-hqs-container');
                 if (resHQs.ok) {
                     const hqs = await resHQs.json();
-                    if(hqs.length === 0) {
+                    if (hqs.length === 0) {
                         hqsContainer.innerHTML = `<div class="text-center text-xs text-history-textMuted pt-8">Nenhuma HQ cadastrada.</div>`;
                     } else {
                         hqsContainer.innerHTML = hqs.map(hq => `
@@ -391,7 +413,6 @@
                 console.error("Erro ao sincronizar painel master:", err);
             }
         }
-
         // Executa ao abrir a página
         window.addEventListener('DOMContentLoaded', carregarDashboard);
 
