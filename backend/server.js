@@ -103,13 +103,16 @@ app.get('/api/dashboard', async (req, res) => {
 app.post('/api/teacher/live', async (req, res) => {
     const { isLive, title, description, meetUrl } = req.body;
     
+    // Força a conversão exata para garantir que seja um booleano puro (true ou false)
+    const statusLive = (isLive === true || isLive === 'true');
+
     try {
-        console.log("Gravando status da transmissão na tabela 'configuracoes'...");
+        console.log(`--> Atualizando transmissão. Status recebido: ${isLive} | Convertido para: ${statusLive}`);
 
         const { data, error } = await supabase
-            .from('configuracoes')
+            .from('configurações') // Nome correto com acento que resolveu o erro anterior
             .update({ 
-                is_live: isLive, 
+                is_live: statusLive, 
                 title: title, 
                 description: description, 
                 meet_url: meetUrl 
@@ -119,12 +122,18 @@ app.post('/api/teacher/live', async (req, res) => {
 
         if (error) throw error;
 
-        // Atualiza a memória local para o front-end receber imediatamente
-        liveState = { isLive, title, description, meetUrl };
+        // Atualiza IMEDIATAMENTE a memória global com o tipo booleano puro
+        liveState = { 
+            isLive: statusLive, 
+            title, 
+            description, 
+            meetUrl 
+        };
 
+        console.log("--> Banco e liveState atualizados com sucesso!");
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
-        console.error("❌ Erro ao atualizar status na tabela configuracoes:", error.message);
+        console.error("❌ Erro ao salvar alteração do checkbox:", error.message);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
