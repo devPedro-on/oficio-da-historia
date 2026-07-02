@@ -55,26 +55,45 @@ app.post('/api/login', async (req, res) => {
     return res.json({ success: true, aluno: data });
 });
 
-// Rota de Dashboard (Carrega Cursos e Quadrinhos)
+// Rota de Dashboard (Carrega Cursos, Quadrinhos e Estado da Live)
 app.get('/api/dashboard', async (req, res) => {
     try {
+        // 1. Busca os Cursos
         const { data: courses, error: coursesError } = await supabase.from('cursos').select('*');
         if (coursesError) {
             console.error("❌ Erro na tabela 'cursos':", coursesError);
             throw coursesError;
         }
 
+        // 2. Busca os Quadrinhos
         const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
         if (comicsError) {
             console.error("❌ Erro na tabela 'quadrinhos':", comicsError);
             throw comicsError;
         }
+
+        // 3. Busca o estado real da Live salvo no banco
+        const { data: liveData, error: liveError } = await supabase
+            .from('configuracoes')
+            .select('*')
+            .eq('id', 1)
+            .single();
         
-        return res.json({ 
-            success: true, 
+        if (!liveError && liveData) {
+            // Mapeia os dados do banco de volta para o formato esperado pelo front-end do aluno
+            liveState = {
+                isLive: liveData.is_live,
+                title: liveData.title,
+                description: liveData.description,
+                meetUrl: liveData.meet_url
+            };
+        }
+
+        return res.json({
+            success: true,
             liveSession: liveState,
-            courses: courses || [], 
-            comics: comics || [] 
+            courses: courses || [],
+            comics: comics || []
         });
     } catch (error) {
         console.error("💥 Erro fatal no endpoint /api/dashboard:", error.message || error);
@@ -82,16 +101,37 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-
 // ==========================================
 // NOVAS ROTAS ADMINISTRATIVAS (POST COM MULTER)
 // ==========================================
 
-// Atualizar Aula Ao Vivo
-app.post('/api/teacher/live', (req, res) => {
+// Atualizar Aula Ao Vivo (Salva no Supabase)
+app.post('/api/teacher/live', async (req, res) => {
     const { isLive, title, description, meetUrl } = req.body;
-    liveState = { isLive, title, description, meetUrl };
-    return res.json({ success: true, liveSession: liveState });
+    
+    try {
+        // Atualiza a linha de id 1 na tabela que você criou
+        const { data, error } = await supabase
+            .from('configuracoes')
+            .update({ 
+                is_live: isLive, 
+                title: title, 
+                description: description, 
+                meet_url: meetUrl 
+            })
+            .eq('id', 1)
+            .select();
+
+        if (error) throw error;
+
+        // Mantém a variável local atualizada na memória do servidor
+        liveState = { isLive, title, description, meetUrl };
+
+        return res.json({ success: true, liveSession: liveState });
+    } catch (error) {
+        console.error("❌ Erro ao atualizar status da live:", error.message);
+        return res.status(500).json({ error: 'Erro ao salvar status da transmissão' });
+    }
 });
 
 // Rota de Cadastro de Curso (Corrigida para coluna 'title')
