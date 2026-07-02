@@ -105,32 +105,39 @@ app.get('/api/dashboard', async (req, res) => {
 // NOVAS ROTAS ADMINISTRATIVAS (POST COM MULTER)
 // ==========================================
 
-// Atualizar Aula Ao Vivo (Salva no Supabase)
 app.post('/api/teacher/live', async (req, res) => {
+    // 1. Captura as variáveis enviadas pelo front-end
     const { isLive, title, description, meetUrl } = req.body;
     
     try {
-        // Atualiza a linha de id 1 na tabela que você criou
+        console.log("Dados recebidos para atualizar a live:", { isLive, title, description, meetUrl });
+
+        // 2. Envia para o Supabase mapeando corretamente para o nome das colunas físicas
         const { data, error } = await supabase
             .from('configuracoes')
             .update({ 
-                is_live: isLive, 
-                title: title, 
-                description: description, 
-                meet_url: meetUrl 
+                is_live: isLive,       // mapeia isLive para is_live
+                title: title,           // mapeia title para title
+                description: description, // mapeia description para description
+                meet_url: meetUrl       // mapeia meetUrl para meet_url
             })
             .eq('id', 1)
             .select();
 
-        if (error) throw error;
+        if (error) {
+            console.error("Erro retornado pelo Supabase:", error.message);
+            throw error;
+        }
 
-        // Mantém a variável local atualizada na memória do servidor
+        console.log("Banco atualizado com sucesso. Retorno:", data);
+
+        // 3. Atualiza a variável local de memória para o painel
         liveState = { isLive, title, description, meetUrl };
 
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
         console.error("❌ Erro ao atualizar status da live:", error.message);
-        return res.status(500).json({ error: 'Erro ao salvar status da transmissão' });
+        return res.status(500).json({ success: false, error: 'Erro ao salvar no banco' });
     }
 });
 
