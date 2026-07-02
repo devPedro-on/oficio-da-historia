@@ -380,10 +380,10 @@
                         cursosContainer.innerHTML = cursos.map(curso => `
                             <div class="flex justify-between items-center bg-[#0B0F17] border border-slate-800 p-3 rounded-lg text-sm">
                                 <div class="truncate max-w-[70%]">
-                                    <h4 class="font-semibold text-slate-200 truncate">${curso.titulo}</h4>
-                                    <p class="text-xs text-history-textMuted truncate">${curso.descricao || 'Sem descrição'}</p>
+                                    <h4 class="font-semibold text-slate-200 truncate">${curso.title}</h4>
+                                    <p class="text-xs text-history-textMuted truncate">${curso.description || 'Sem descrição'}</p>
                                 </div>
-                                <button onclick="removerCurso('${curso.id}', '${curso.titulo}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
+                                <button onclick="removerCurso('${curso.id}', '${curso.title}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
                             </div>
                         `).join('');
                     }
@@ -400,10 +400,10 @@
                         hqsContainer.innerHTML = hqs.map(hq => `
                             <div class="flex justify-between items-center bg-[#0B0F17] border border-slate-800 p-3 rounded-lg text-sm">
                                 <div>
-                                    <h4 class="font-semibold text-slate-200">${hq.titulo}</h4>
+                                    <h4 class="font-semibold text-slate-200">${hq.title}</h4>
                                     <p class="text-xs text-history-gold font-medium">${hq.volume || 'Volume Único'}</p>
                                 </div>
-                                <button onclick="removerHQ('${hq.id}', '${hq.titulo}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
+                                <button onclick="removerHQ('${hq.id}', '${hq.title}')" class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded hover:bg-red-500 hover:text-white transition-all">Apagar</button>
                             </div>
                         `).join('');
                     }
@@ -440,16 +440,26 @@
             if(!confirm(`Excluir permanentemente o curso: ${titulo}?`)) return;
             try {
                 const res = await fetch(`${API_BASE}/admin/cursos/${id}`, { method: 'DELETE' });
-                if(res.ok) { showStatus(`Curso "${titulo}" removido com sucesso.`, "success"); carregarDashboard(); }
-            } catch(e) { showStatus("Erro ao deletar curso.", "error"); }
+                if(res.ok) { 
+                    showStatus(`Curso "${titulo}" removido com sucesso.`, "success");
+                    carregarDashboard(); 
+                }
+            } catch(e) { 
+                showStatus("Erro ao deletar curso.", "error"); 
+            }
         }
 
         async function removerHQ(id, titulo) {
             if(!confirm(`Excluir permanentemente a HQ: ${titulo}?`)) return;
             try {
                 const res = await fetch(`${API_BASE}/admin/hqs/${id}`, { method: 'DELETE' });
-                if(res.ok) { showStatus(`HQ "${titulo}" removida com sucesso.`, "success"); carregarDashboard(); }
-            } catch(e) { showStatus("Erro ao deletar HQ.", "error"); }
+                if(res.ok) { 
+                    showStatus(`HQ "${titulo}" removida com sucesso.`, "success"); 
+                    carregarDashboard(); 
+                }
+            } catch(e) { 
+                showStatus("Erro ao deletar HQ.", "error"); 
+            }
         }
 
         // ==========================================
