@@ -66,11 +66,20 @@ app.get('/api/dashboard', async (req, res) => {
         const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
         if (comicsError) throw comicsError;
 
-        // Plano B: Pega o estado da live diretamente de dentro do primeiro curso encontrado
-        if (courses && courses.length > 0) {
-            liveState.isLive = courses[0].is_live;
-            // Se precisar que o título/descrição mude dinamicamente, você também pode criar
-            // colunas para eles no curso, ou manter as variáveis padrão do seu front.
+        // 3. Busca o estado real da live de forma isolada
+        const { data: liveData, error: liveError } = await supabase
+            .from('configuracoes')
+            .select('*')
+            .eq('id', 1)
+            .single();
+        
+        if (!liveError && liveData) {
+            liveState = {
+                isLive: liveData.is_live,
+                title: liveData.title,
+                description: liveData.description,
+                meetUrl: liveData.meet_url
+            };
         }
 
         return res.json({
@@ -80,7 +89,7 @@ app.get('/api/dashboard', async (req, res) => {
             comics: comics || []
         });
     } catch (error) {
-        console.error("❌ Erro no dashboard do aluno:", error.message);
+        console.error("❌ Erro ao carregar dashboard:", error.message);
         return res.status(500).json({ error: 'Erro ao carregar dashboard' });
     }
 });
@@ -90,32 +99,32 @@ app.get('/api/dashboard', async (req, res) => {
 // ==========================================
 
 
-// Atualizar Aula Ao Vivo (Salvando na tabela Cursos - Plano B)
+// Atualizar Aula Ao Vivo (O jeito correto: Salvando na tabela configuracoes)
 app.post('/api/teacher/live', async (req, res) => {
     const { isLive, title, description, meetUrl } = req.body;
     
     try {
-        console.log("Plano B - Atualizando status na tabela 'cursos':", isLive);
+        console.log("Gravando status da transmissão na tabela 'configuracoes'...");
 
-        // Atualiza a coluna is_live dentro do curso com ID 1
         const { data, error } = await supabase
-            .from('cursos')
+            .from('configuracoes')
             .update({ 
-                is_live: isLive
-                // Nota: se o título e descrição da live forem sempre fixos ou gerenciados pelo front,
-                // você pode salvar apenas o status do checkbox aqui.
+                is_live: isLive, 
+                title: title, 
+                description: description, 
+                meet_url: meetUrl 
             })
             .eq('id', 1)
             .select();
 
         if (error) throw error;
 
-        // Atualiza a memória local para entrega imediata ao front-end
+        // Atualiza a memória local para o front-end receber imediatamente
         liveState = { isLive, title, description, meetUrl };
 
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
-        console.error("❌ Erro no Plano B ao atualizar status:", error.message);
+        console.error("❌ Erro ao atualizar status na tabela configuracoes:", error.message);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
