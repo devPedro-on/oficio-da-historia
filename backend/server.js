@@ -21,6 +21,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// Adiciona as pastas estáticas para o PWA funcionar
+app.use(express.static('frontend')); 
+app.use(express.static('./'));       
+
+// Estado temporário na memória para a Live
+
 // Estado temporário na memória para a Live
 let liveState = {
     isLive: false,

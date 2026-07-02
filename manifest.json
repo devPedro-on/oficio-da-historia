@@ -1,7 +1,7 @@
 {
   "name": "Ofício da História",
   "short_name": "OfícioHistória",
-  "start_url": "index.html",
+  "start_url": "/frontend/index.html",
   "display": "standalone",
   "background_color": "#0B0F17",
   "theme_color": "#D4AF37",
