@@ -105,29 +105,22 @@ app.post('/api/teacher/live', async (req, res) => {
         const { isLive, title, description, meetUrl } = req.body;
         const statusLive = (isLive === true || isLive === 'true');
         
-        console.log(`[LIVE POST] Acionando RPC. Status: ${statusLive}`);
+        console.log(`[LIVE POST] Salvando na tabela config_live: isLive=${statusLive}`);
 
-        // Chama a função SQL direto, contornando o erro de schema cache
-        const { error } = await supabase.rpc('atualizar_live', {
-            p_is_live: statusLive,
-            p_title: title || '',
-            p_description: description || '',
-            p_meet_url: meetUrl || ''
-        });
+        const { data, error } = await supabase
+            .from('config_live')
+            .update({ 
+                is_live: statusLive, 
+                title: title || '', 
+                description: description || '', 
+                meet_url: meetUrl || '' 
+            })
+            .eq('id', 1)
+            .select();
 
-        if (error) {
-            console.error("[LIVE POST] Erro na execução da RPC:", error.message);
-            throw error;
-        }
+        if (error) throw error;
 
-        // Sincroniza a memória local para resposta rápida
-        liveState = { 
-            isLive: statusLive, 
-            title: title || '', 
-            description: description || '', 
-            meetUrl: meetUrl || '' 
-        };
-
+        liveState = { isLive: statusLive, title, description, meetUrl };
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
         console.error("[LIVE POST] Erro crítico:", error.message);
