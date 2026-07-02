@@ -8,6 +8,14 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const app = express();
 
+// Estado da Live (Gerenciado em memória)
+let liveSessionState = {
+    isLive: false,
+    title: "Grécia Antiga",
+    description: "Acesso liberado pelo professor no momento da transmissão.",
+    meetUrl: "https://meet.google.com/seu-link-aqui"
+};
+
 // Configuração do Multer para gerenciar o upload de arquivos binários em memória
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -21,11 +29,16 @@ app.use(cors({
 
 app.use(express.json());
 
+// Rota para o Professor atualizar o status da live
+app.post('/api/liberar-live', (req, res) => {
+    const { isLive } = req.body;
+    liveSessionState.isLive = isLive;
+    res.json({ message: "Status da live atualizado", status: liveSessionState.isLive });
+});
+
 // Adiciona as pastas estáticas para o PWA funcionar
 app.use(express.static('frontend')); 
 app.use(express.static('./'));       
-
-// Estado temporário na memória para a Live
 
 // Estado temporário na memória para a Live
 let liveState = {

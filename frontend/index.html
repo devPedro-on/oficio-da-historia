@@ -95,21 +95,33 @@
                     document.getElementById('live-banner').classList.add('hidden');
                 }
 
-                // Renderiza Cursos tratando possíveis variações de nomes de coluna
+                // Renderiza Cursos com lógica de automação
                 if (data.courses && data.courses.length > 0) {
+                    const isLive = data.liveSession?.isLive; // Verifica o estado da live
                     document.getElementById('courses-container').innerHTML = data.courses.map(c => {
                         const titulo = c.title || c.nome || "Curso sem título";
-                        const progresso = c.progress !== undefined ? c.progress : (c.progresso || 0);
                         return `
-                            <div class="bg-history-card border border-slate-800 p-5 rounded-xl">
-                                <h4 class="font-bold text-lg">${titulo}</h4>
-                                <div class="w-full bg-slate-800 h-2 mt-2 rounded-full">
-                                    <div class="bg-history-gold h-full rounded-full" style="width: ${progresso}%"></div>
+                            <div class="bg-[#111827] border border-slate-700 rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition-all hover:border-history-gold">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white mb-1">${titulo}</h3>
+                                    <p class="text-sm text-slate-400">
+                                        ${isLive ? "A transmissão está liberada!" : "Curso ao vivo — Acesso liberado pelo professor no momento da transmissão."}
+                                    </p>
+                                </div>
+                                
+                                <div class="mt-4 md:mt-0 flex items-center space-x-2 bg-[#0B0F17] px-4 py-2 rounded-full border border-slate-800">
+                                    <span class="relative flex h-3 w-3">
+                                        ${isLive 
+                                            ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>' 
+                                            : '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-slate-400"></span>'
+                                        }
+                                    </span>
+                                    <span class="text-xs font-semibold ${isLive ? 'text-green-400' : 'text-slate-300'} uppercase tracking-wider">
+                                        ${isLive ? 'Ao Vivo Agora' : 'Aguardando Início'}
+                                    </span>
                                 </div>
                             </div>`;
                     }).join('');
-                } else {
-                    document.getElementById('courses-container').innerHTML = `<p class="text-history-textMuted text-sm">Nenhum curso encontrado.</p>`;
                 }
 
                 // Renderiza Quadrinhos tratando possíveis variações de nomes de coluna
