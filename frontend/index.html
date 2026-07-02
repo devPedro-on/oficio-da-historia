@@ -129,7 +129,8 @@
                     document.getElementById('comics-container').innerHTML = data.comics.map(hq => {
                         const titulo = hq.title || hq.nome || hq.titulo || "Sem título";
                         const capa = hq.cover || hq.capa || "https://via.placeholder.com/150";
-                        const linkPdf = hq.pdf || hq.link || "#"; // Pega o link do PDF vindo do banco
+                        const linkPdf = hq.pdf || hq.link || hq.url || "#";
+                        console.log("HQ:", titulo, "Link encontrado:", linkPdf);
                             return `
                                 <a href="${linkPdf}" target="_blank" rel="noopener noreferrer" class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold block transition-colors">
                                     <img src="${capa}" class="rounded-lg mb-2 w-full object-cover aspect-[3/4]" alt="${titulo}">
