@@ -281,6 +281,51 @@ app.delete('/api/admin/alunos/:id', async (req, res) => {
     }
 });
 
+// Deleção de Cursos
+app.delete('/api/admin/cursos/:id', async (req, res) => {
+    const idRecebido = req.params.id;
+    try {
+        console.log(`Tentando deletar curso pelo ID único: ${idRecebido}`);
+
+        const { data, error } = await supabase
+            .from('cursos')
+            .delete()
+            .eq('id', idRecebido)
+            .select();
+
+        if (error) throw error;
+
+        console.log("Resultado da deleção de curso:", data);
+        return res.json({ success: true, deletado: data });
+    } catch (error) {
+        console.error("❌ Erro ao deletar curso por ID:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// Deleção de HQs (Quadrinhos)
+app.delete('/api/admin/hqs/:id', async (req, res) => {
+    const idRecebido = req.params.id;
+    try {
+        console.log(`Tentando deletar HQ pelo ID único: ${idRecebido}`);
+
+        // Usando 'quadrinhos' que é o nome real da sua tabela mapeada no banco
+        const { data, error } = await supabase
+            .from('quadrinhos')
+            .delete()
+            .eq('id', idRecebido)
+            .select();
+
+        if (error) throw error;
+
+        console.log("Resultado da deleção de HQ:", data);
+        return res.json({ success: true, deletado: data });
+    } catch (error) {
+        console.error("❌ Erro ao deletar HQ por ID:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 // Inicialização do Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
