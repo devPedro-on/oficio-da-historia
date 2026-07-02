@@ -66,16 +66,16 @@ app.get('/api/dashboard', async (req, res) => {
         const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
         if (comicsError) throw comicsError;
 
-        // 3. Busca o estado real da live de forma isolada
+        // 3. Busca o estado real da live na tabela com acento
         const { data: liveData, error: liveError } = await supabase
-            .from('configuracoes')
+            .from('configurações')
             .select('*')
             .eq('id', 1)
             .single();
         
         if (!liveError && liveData) {
             liveState = {
-                isLive: liveData.is_live,
+                isLive: liveData.is_live, // Força a sincronia exata (true ou false)
                 title: liveData.title,
                 description: liveData.description,
                 meetUrl: liveData.meet_url
@@ -84,7 +84,7 @@ app.get('/api/dashboard', async (req, res) => {
 
         return res.json({
             success: true,
-            liveSession: liveState,
+            liveSession: liveState, 
             courses: courses || [],
             comics: comics || []
         });

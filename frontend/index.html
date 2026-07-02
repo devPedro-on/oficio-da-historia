@@ -89,6 +89,9 @@
                     document.getElementById('live-description').innerText = data.liveSession.description;
                     document.getElementById('meet-btn').onclick = () => window.open(data.liveSession.meetUrl, '_blank');
                     document.getElementById('live-banner').classList.remove('hidden');
+                } else {
+                    // Se isLive for falso ou não existir, esconde o banner da transmissão automaticamente
+                    document.getElementById('live-banner').classList.add('hidden');
                 }
 
                 // Renderiza Cursos tratando possíveis variações de nomes de coluna
