@@ -78,7 +78,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-history-textMuted uppercase">Título da Aula</label>
+                        <label for="liveTitle" class="text-xs font-semibold text-history-textMuted uppercase">Título da Aula</label>
                         <input type="text" id="liveTitle" value="Módulo Especial: A Invasão de Lindisfarne" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white" required>
                     </div>
                     <div class="space-y-1">
@@ -115,16 +115,17 @@
                         <input type="text" id="cpfAluno" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-history-gold text-white placeholder-slate-600 transition-colors" required>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold text-history-textMuted uppercase">Senha Inicial</label>
-                        <div class="relative">
+                        <label for="senhaAluno" class="text-xs font-semibold text-history-textMuted uppercase">Senha Inicial</label>
+                        < class="relative">
                             <input type="password" id="senhaAluno" placeholder="Ex: 123456" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 pr-10 text-sm focus:outline-none focus:border-history-gold text-white placeholder-slate-600 transition-colors" required>
-                            <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-history-gold transition-colors select-none flex items-center justify-center">
+                        
+                            <button type="button" id="toggle-password" aria-label="Mostrar ou ocultar senha" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-history-gold transition-colors select-none flex items-center justify-center">
                                 <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                                 <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.5l-1-2.5M12 9V6M16 9.5l1-2.5M20 11l1.5-2" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.51-1-2.5M12 9V6M16 9.511-2.5M20 11l1.5-2" />
                                 </svg>
                             </button>
                         </div>
