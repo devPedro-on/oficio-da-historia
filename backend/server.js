@@ -259,7 +259,7 @@ app.get('/api/admin/hqs', async (req, res) => {
     return res.json(data);
 });
 
-// Deleções Diretas (Corrigida para ignorar pontos e hífens)
+// Deleções Diretas (Corrigida para ignorar pontos e hífens)(feito)
 app.delete('/api/admin/alunos/:id', async (req, res) => {
     const idRecebido = req.params.id;
     try {
