@@ -101,39 +101,36 @@ app.get('/api/dashboard', async (req, res) => {
 
 // Atualizar Aula Ao Vivo (O jeito correto: Salvando na tabela configuracoes)
 app.post('/api/teacher/live', async (req, res) => {
-    const { isLive, title, description, meetUrl } = req.body;
-    
-    // Força a conversão exata para garantir que seja um booleano puro (true ou false)
-    const statusLive = (isLive === true || isLive === 'true');
-
     try {
-        console.log(`--> Atualizando transmissão. Status recebido: ${isLive} | Convertido para: ${statusLive}`);
+        const { isLive, title, description, meetUrl } = req.body;
+        const statusLive = (isLive === true || isLive === 'true');
+        
+        console.log(`[LIVE POST] Acionando RPC. Status: ${statusLive}`);
 
-        const { data, error } = await supabase
-            .from('configurações') // Nome correto com acento que resolveu o erro anterior
-            .update({ 
-                is_live: statusLive, 
-                title: title, 
-                description: description, 
-                meet_url: meetUrl 
-            })
-            .eq('id', 1)
-            .select();
+        // Chama a função SQL direto, contornando o erro de schema cache
+        const { error } = await supabase.rpc('atualizar_live', {
+            p_is_live: statusLive,
+            p_title: title || '',
+            p_description: description || '',
+            p_meet_url: meetUrl || ''
+        });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[LIVE POST] Erro na execução da RPC:", error.message);
+            throw error;
+        }
 
-        // Atualiza IMEDIATAMENTE a memória global com o tipo booleano puro
+        // Sincroniza a memória local para resposta rápida
         liveState = { 
             isLive: statusLive, 
-            title, 
-            description, 
-            meetUrl 
+            title: title || '', 
+            description: description || '', 
+            meetUrl: meetUrl || '' 
         };
 
-        console.log("--> Banco e liveState atualizados com sucesso!");
         return res.json({ success: true, liveSession: liveState });
     } catch (error) {
-        console.error("❌ Erro ao salvar alteração do checkbox:", error.message);
+        console.error("[LIVE POST] Erro crítico:", error.message);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
