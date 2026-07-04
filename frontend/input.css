@@ -1,1 +1,9 @@
-@tailwind base; @tailwind components; @tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-history-bg: #0B0F17;
+  --color-history-card: #131A26;
+  --color-history-gold: #D4AF37;
+  --color-history-goldHover: #AA8417;
+  --color-history-textMuted: #94A3B8;
+}
