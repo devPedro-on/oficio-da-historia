@@ -128,6 +128,7 @@
                 // Renderiza Quadrinhos tratando possíveis variações de nomes de coluna
                 if (data.comics && data.comics.length > 0) {
                     document.getElementById('comics-container').innerHTML = data.comics.map(hq => {
+                        const titulo = hq.title || hq.nome || hq.titulo || "Sem título";
                         const capaOtimizada = `${hq.cover}?width=300&height=400&format=webp`;
                         const capa = hq.cover || hq.capa || "https://via.placeholder.com/150";
                         const linkPdf = hq.pdf_url || hq.pdf || hq.link || "#";
