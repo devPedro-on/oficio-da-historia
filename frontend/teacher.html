@@ -42,9 +42,14 @@
             </span>
             <span class="bg-red-100 text-red-800 border border-red-300 text-xs font-bold px-2.5 py-0.5 rounded">PAINEL MASTER</span>
         </div>
-        <button onclick="window.location.href='index.html'" class="text-sm font-medium text-history-textMuted hover:text-history-gold transition-colors">
-            Visualizar como Aluno →
-        </button>
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.href='index.html'" class="text-sm font-medium text-history-textMuted hover:text-history-gold transition-colors">
+                Visualizar como Aluno →
+            </button>
+            <button onclick="encerrarSessao()" class="text-[10px] uppercase tracking-widest text-red-700 hover:text-red-800 transition-colors">
+                Sair
+            </button>
+        </div>
     </nav>
 
     <main class="max-w-4xl mx-auto px-6 py-8 space-y-8">
@@ -136,7 +141,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                                 <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.51-1-2.5M12 9V6M16 9.511-2.5M20 11l1.5-2" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14c2.5-3.33 6.5-5 9-5s6.5 1.67 9 5M4 11l-1.5-2M8 9.5l-1-2.5M12 9V6M16 9.5l1-2.5M20 11l1.5-2" />
                                 </svg>
                             </button>
                         </div>
@@ -252,7 +257,9 @@
     </main>
 
     <script>
-        if (localStorage.getItem('oficio_session_role') !== 'teacher') {
+        const TOKEN = localStorage.getItem('oficio_teacher_token');
+
+        if (!TOKEN) {
             window.location.href = 'login-professor.html';
         }
 
@@ -262,12 +269,30 @@
         const API_CADASTRAR_URL = `${API_BASE}/admin/cadastrar-aluno`;
         const API_CURSO_URL = `${API_BASE}/admin/cadastrar-curso`;
         const API_HQ_URL = `${API_BASE}/admin/cadastrar-hq`;
-        
+
         // Novos Endpoints para listagem e remoção (Gerenciamento)
         const API_METRICAS_URL = `${API_BASE}/admin/metricas`;
         const API_LISTA_ALUNOS = `${API_BASE}/admin/alunos`;
         const API_LISTA_CURSOS = `${API_BASE}/admin/cursos`;
         const API_LISTA_HQS = `${API_BASE}/admin/hqs`;
+
+        // Encerra a sessão e volta para o login quando o token expira ou é inválido
+        function encerrarSessao() {
+            localStorage.removeItem('oficio_teacher_token');
+            window.location.href = 'login-professor.html';
+        }
+
+        // Wrapper do fetch que anexa o token e trata 401/403 automaticamente
+        async function apiFetch(url, options = {}) {
+            const headers = { ...(options.headers || {}), 'Authorization': `Bearer ${TOKEN}` };
+            const response = await fetch(url, { ...options, headers });
+
+            if (response.status === 401 || response.status === 403) {
+                encerrarSessao();
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+            return response;
+        }
 
         // ==========================================
         // CONTROLES DE INTERFACE E MÁSCARAS
@@ -325,7 +350,7 @@
         async function carregarDashboard() {
             try {
                 // 1. Carrega Métricas
-                const resMetrics = await fetch(API_METRICAS_URL);
+                const resMetrics = await apiFetch(API_METRICAS_URL);
                 if (resMetrics.ok) {
                     const metrics = await resMetrics.json();
                     document.getElementById('metric-alunos').innerText = metrics.totalAlunas || 0;
@@ -334,7 +359,7 @@
                 }
 
                 // 2. Carrega Lista de Alunos
-                const resAlunos = await fetch(API_LISTA_ALUNOS);
+                const resAlunos = await apiFetch(API_LISTA_ALUNOS);
                 const alunosContainer = document.getElementById('lista-alunos-container');
                 if (resAlunos.ok) {
                     const alunos = await resAlunos.json();
@@ -354,7 +379,7 @@
                 }
 
                 // 3. Carrega o estado atual da Transmissão / Live
-                const resLive = await fetch('/api/dashboard');
+                const resLive = await fetch(`${API_BASE}/dashboard`);
                 if (resLive.ok) {
                     const dataLive = await resLive.json();
                     
@@ -376,7 +401,7 @@
                 }
 
                 // 4. Carrega Lista de Cursos
-                const resCursos = await fetch(API_LISTA_CURSOS);
+                const resCursos = await apiFetch(API_LISTA_CURSOS);
                 const cursosContainer = document.getElementById('lista-cursos-container');
                 if (resCursos.ok) {
                     const cursos = await resCursos.json();
@@ -396,7 +421,7 @@
                 }
 
                 // 5. Carrega Lista de HQs
-                const resHQs = await fetch(API_LISTA_HQS);
+                const resHQs = await apiFetch(API_LISTA_HQS);
                 const hqsContainer = document.getElementById('lista-hqs-container');
                 if (resHQs.ok) {
                     const hqs = await resHQs.json();
@@ -427,7 +452,7 @@
             if(!confirm(`Tem certeza que deseja revogar o acesso de ${nome}?`)) return;
             try {
                 // Agora envia o ID na URL para o servidor
-                const res = await fetch(`${API_BASE}/admin/alunos/${id}`, { method: 'DELETE' });
+                const res = await apiFetch(`${API_BASE}/admin/alunos/${id}`, { method: 'DELETE' });
                 
                 if(res.ok) { 
                     showStatus(`Acesso de ${nome} removido.`, "success"); 
@@ -445,7 +470,7 @@
         async function removerCurso(id, titulo) {
             if(!confirm(`Excluir permanentemente o curso: ${titulo}?`)) return;
             try {
-                const res = await fetch(`${API_BASE}/admin/cursos/${id}`, { method: 'DELETE' });
+                const res = await apiFetch(`${API_BASE}/admin/cursos/${id}`, { method: 'DELETE' });
                 if(res.ok) { 
                     showStatus(`Curso "${titulo}" removido com sucesso.`, "success");
                     carregarDashboard(); 
@@ -458,7 +483,7 @@
         async function removerHQ(id, titulo) {
             if(!confirm(`Excluir permanentemente a HQ: ${titulo}?`)) return;
             try {
-                const res = await fetch(`${API_BASE}/admin/hqs/${id}`, { method: 'DELETE' });
+                const res = await apiFetch(`${API_BASE}/admin/hqs/${id}`, { method: 'DELETE' });
                 if(res.ok) { 
                     showStatus(`HQ "${titulo}" removida com sucesso.`, "success"); 
                     carregarDashboard(); 
@@ -485,7 +510,7 @@
             };
 
             try {
-                const response = await fetch(API_LIVE_URL, {
+                const response = await apiFetch(API_LIVE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -517,7 +542,7 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch(API_CADASTRAR_URL, {
+                const response = await apiFetch(API_CADASTRAR_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, cpf, senha })
@@ -551,7 +576,7 @@
             formData.append('capa', document.getElementById('capaCurso').files[0]);
 
             try {
-                const response = await fetch(API_CURSO_URL, { method: 'POST', body: formData });
+                const response = await apiFetch(API_CURSO_URL, { method: 'POST', body: formData });
                 const data = await response.json();
 
                 if (response.ok && data.success) {
@@ -584,7 +609,7 @@
             formData.append('capa', document.getElementById('capaHQ').files[0]); 
 
             try {
-                const response = await fetch(API_HQ_URL, { method: 'POST', body: formData });
+                const response = await apiFetch(API_HQ_URL, { method: 'POST', body: formData });
                 const data = await response.json();
 
                 if (response.ok && data.success) {

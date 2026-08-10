@@ -2,43 +2,72 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Configuração do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-const app = express();
+// ==========================================
+// CONFIGURAÇÃO DE SEGURANÇA
+// ==========================================
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const TEACHER_CPF = (process.env.TEACHER_CPF || '').replace(/\D/g, '');
+const TEACHER_PASSWORD_HASH = process.env.TEACHER_PASSWORD_HASH;
 
-// Estado da Live (Gerenciado em memória)
-let liveSessionState = {
-    isLive: false,
-    title: "Grécia Antiga",
-    description: "Acesso liberado pelo professor no momento da transmissão.",
-    meetUrl: "https://meet.google.com/seu-link-aqui"
-};
+// Falha alto e cedo: sem essas variáveis o painel master ficaria desprotegido.
+for (const [nome, valor] of Object.entries({ SESSION_SECRET, TEACHER_CPF, TEACHER_PASSWORD_HASH })) {
+    if (!valor) {
+        console.error(`❌ Variável de ambiente obrigatória ausente: ${nome}`);
+        process.exit(1);
+    }
+}
+
+// Origens autorizadas a consumir a API (o '*' anterior deixava qualquer site chamar as rotas admin)
+const ALLOWED_ORIGINS = [
+    'https://oficio-da-historia.vercel.app',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+];
+
+const app = express();
 
 // Configuração do Multer para gerenciar o upload de arquivos binários em memória
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Configuração de CORS expandida para aceitar as novas funções de exclusão
 app.use(cors({
-    origin: '*', 
+    origin: (origin, callback) => {
+        // Requisições sem Origin (Postman, curl, health check do Render) seguem permitidas.
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+        return callback(new Error('Origem não autorizada pelo CORS'));
+    },
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 
-// Rota para o Professor atualizar o status da live
-app.post('/api/liberar-live', (req, res) => {
-    const { isLive } = req.body;
-    liveSessionState.isLive = isLive;
-    res.json({ message: "Status da live atualizado", status: liveSessionState.isLive });
-});
+// Middleware que exige um token de professor válido nas rotas administrativas
+function requireTeacher(req, res, next) {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
 
-// Adiciona as pastas estáticas para o PWA funcionar
-app.use(express.static('frontend')); 
-app.use(express.static('./'));       
+    if (!token) {
+        return res.status(401).json({ error: 'Autenticação obrigatória.' });
+    }
+
+    try {
+        const payload = jwt.verify(token, SESSION_SECRET);
+        if (payload.role !== 'teacher') {
+            return res.status(403).json({ error: 'Acesso restrito ao professor.' });
+        }
+        req.teacher = payload;
+        return next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Sessão expirada. Faça login novamente.' });
+    }
+}
 
 // Estado temporário na memória para a Live
 let liveState = {
@@ -52,26 +81,70 @@ let liveState = {
 // SUAS ROTAS ORIGINAIS (CORRIGIDAS PARA O SCHEMA)
 // ==========================================
 
-// Rota de Cadastro de Aluno
-app.post('/api/admin/cadastrar-aluno', async (req, res) => {
+// Login do Professor (antes era validado no HTML, com a senha exposta no navegador)
+app.post('/api/teacher/login', async (req, res) => {
+    const { cpf, senha } = req.body;
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+
+    const cpfConfere = cpfLimpo === TEACHER_CPF;
+    const senhaConfere = await bcrypt.compare(senha || '', TEACHER_PASSWORD_HASH);
+
+    if (!cpfConfere || !senhaConfere) {
+        return res.status(401).json({ error: 'Acesso negado. Credenciais administrativas inválidas.' });
+    }
+
+    const token = jwt.sign({ role: 'teacher' }, SESSION_SECRET, { expiresIn: '12h' });
+    return res.json({ success: true, token });
+});
+
+// Rota de Cadastro de Aluno (senha gravada com hash)
+app.post('/api/admin/cadastrar-aluno', requireTeacher, async (req, res) => {
     const { nome, cpf, senha } = req.body;
-    const { data, error } = await supabase.from('alunos').insert([{ nome, cpf, senha }]).select();
-    
+
+    if (!nome || !cpf || !senha) {
+        return res.status(400).json({ error: 'Nome, CPF e senha são obrigatórios.' });
+    }
+
+    const senhaHash = await bcrypt.hash(senha, 10);
+    const { data, error } = await supabase.from('alunos')
+        .insert([{ nome, cpf: cpf.replace(/\D/g, ''), senha: senhaHash }])
+        .select('id, nome, cpf');
+
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ success: true, aluno: data[0] });
 });
 
-// Rota de Login
+// Rota de Login do Aluno
 app.post('/api/login', async (req, res) => {
     const { cpf, senha } = req.body;
-    const { data, error } = await supabase.from('alunos')
-        .select('id, nome, cpf')
-        .eq('cpf', cpf)
-        .eq('senha', senha)
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+
+    const { data: aluno, error } = await supabase.from('alunos')
+        .select('id, nome, cpf, senha')
+        .eq('cpf', cpfLimpo)
         .single();
 
-    if (error || !data) return res.status(401).json({ error: 'Credenciais inválidas.' });
-    return res.json({ success: true, aluno: data });
+    if (error || !aluno) return res.status(401).json({ error: 'Credenciais inválidas.' });
+
+    const senhaArmazenada = aluno.senha || '';
+    const pareceHash = senhaArmazenada.startsWith('$2');
+    let autenticado = false;
+
+    if (pareceHash) {
+        autenticado = await bcrypt.compare(senha || '', senhaArmazenada);
+    } else if (senhaArmazenada === senha) {
+        // Senha antiga em texto puro: valida uma última vez e já regrava com hash.
+        autenticado = true;
+        const senhaHash = await bcrypt.hash(senha, 10);
+        const { error: upgradeError } = await supabase.from('alunos')
+            .update({ senha: senhaHash })
+            .eq('id', aluno.id);
+        if (upgradeError) console.error('⚠️ Falha ao migrar senha para hash:', upgradeError.message);
+    }
+
+    if (!autenticado) return res.status(401).json({ error: 'Credenciais inválidas.' });
+
+    return res.json({ success: true, aluno: { id: aluno.id, nome: aluno.nome, cpf: aluno.cpf } });
 });
 
 // Rota de Dashboard (Carrega Cursos, Quadrinhos e Estado da Live)
@@ -119,7 +192,7 @@ app.get('/api/dashboard', async (req, res) => {
 
 
 // Atualizar Aula Ao Vivo (O jeito correto: Salvando na tabela configuracoes)
-app.post('/api/teacher/live', async (req, res) => {
+app.post('/api/teacher/live', requireTeacher, async (req, res) => {
     try {
         const { isLive, title, description, meetUrl } = req.body;
         const statusLive = (isLive === true || isLive === 'true');
@@ -148,7 +221,7 @@ app.post('/api/teacher/live', async (req, res) => {
 });
 
 // Rota de Cadastro de Curso (Corrigida para coluna 'title')
-app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) => {
+app.post('/api/admin/cadastrar-curso', requireTeacher, upload.single('capa'), async (req, res) => {
     try {
         const { titulo } = req.body; 
 
@@ -179,7 +252,7 @@ app.post('/api/admin/cadastrar-curso', upload.single('capa'), async (req, res) =
 });
 
 // Rota de Cadastro de HQ (Corrigida para colunas 'title' e 'cover')
-app.post('/api/admin/cadastrar-hq', upload.fields([
+app.post('/api/admin/cadastrar-hq', requireTeacher, upload.fields([
     { name: 'arquivo', maxCount: 1 },
     { name: 'capa', maxCount: 1 }
 ]), async (req, res) => {
@@ -245,7 +318,7 @@ app.post('/api/admin/cadastrar-hq', upload.fields([
 // ==========================================
 
 // Buscar Métricas do Dashboard Master
-app.get('/api/admin/metricas', async (req, res) => {
+app.get('/api/admin/metricas', requireTeacher, async (req, res) => {
     try {
         const { count: totalAlunas } = await supabase.from('alunos').select('*', { count: 'exact', head: true });
         const { count: totalCursos } = await supabase.from('cursos').select('*', { count: 'exact', head: true });
@@ -258,28 +331,28 @@ app.get('/api/admin/metricas', async (req, res) => {
 });
 
 // Listar Alunos Cadastrados
-app.get('/api/admin/alunos', async (req, res) => {
+app.get('/api/admin/alunos', requireTeacher, async (req, res) => {
     const { data, error } = await supabase.from('alunos').select('id, nome, cpf').order('nome');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
 
 // Listar Cursos Cadastrados (Corrigido para 'title')
-app.get('/api/admin/cursos', async (req, res) => {
+app.get('/api/admin/cursos', requireTeacher, async (req, res) => {
     const { data, error } = await supabase.from('cursos').select('id, title').order('title');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
 
 // Listar HQs Cadastradas (Corrigido para 'title')
-app.get('/api/admin/hqs', async (req, res) => {
+app.get('/api/admin/hqs', requireTeacher, async (req, res) => {
     const { data, error } = await supabase.from('quadrinhos').select('id, title, cover').order('title');
     if (error) return res.status(500).json({ error: error.message });
     return res.json(data);
 });
 
 // Deleções Diretas (Corrigida para ignorar pontos e hífens)(feito)
-app.delete('/api/admin/alunos/:id', async (req, res) => {
+app.delete('/api/admin/alunos/:id', requireTeacher, async (req, res) => {
     const idRecebido = req.params.id;
     try {
         console.log(` Tentando deletar aluno pelo ID único: ${idRecebido}`);
@@ -301,7 +374,7 @@ app.delete('/api/admin/alunos/:id', async (req, res) => {
 });
 
 // Deleção de Cursos
-app.delete('/api/admin/cursos/:id', async (req, res) => {
+app.delete('/api/admin/cursos/:id', requireTeacher, async (req, res) => {
     const idRecebido = req.params.id;
     try {
         console.log(`Tentando deletar curso pelo ID único: ${idRecebido}`);
@@ -323,7 +396,7 @@ app.delete('/api/admin/cursos/:id', async (req, res) => {
 });
 
 // Deleção de HQs (Quadrinhos)
-app.delete('/api/admin/hqs/:id', async (req, res) => {
+app.delete('/api/admin/hqs/:id', requireTeacher, async (req, res) => {
     const idRecebido = req.params.id;
     try {
         console.log(`Tentando deletar HQ pelo ID único: ${idRecebido}`);
@@ -343,6 +416,15 @@ app.delete('/api/admin/hqs/:id', async (req, res) => {
         console.error("❌ Erro ao deletar HQ por ID:", error.message);
         return res.status(500).json({ error: error.message });
     }
+});
+
+// Tratador de erros: evita devolver stack trace em HTML quando o CORS recusa a origem
+app.use((err, req, res, next) => {
+    if (err && err.message === 'Origem não autorizada pelo CORS') {
+        return res.status(403).json({ error: 'Origem não autorizada.' });
+    }
+    console.error('❌ Erro não tratado:', err.message);
+    return res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
 // Inicialização do Servidor
