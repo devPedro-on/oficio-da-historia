@@ -1,5 +1,5 @@
 // A raiz publicada no Vercel é a pasta frontend/, então os caminhos aqui partem dela.
-const CACHE_NAME = 'oficio-v2';
+const CACHE_NAME = 'oficio-v3';
 const ASSETS = [
   '/index.html',
   '/login-aluno.html',
@@ -52,8 +52,20 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Demais arquivos (CSS, imagens): cache primeiro, por velocidade.
+  // Demais arquivos (CSS, imagens): responde do cache na hora, mas busca a versão
+  // nova em segundo plano e guarda para a próxima visita. Sem isso, uma alteração
+  // de CSS publicada nunca chegaria a quem já tem o arquivo em cache.
   e.respondWith(
-    caches.match(req).then((res) => res || fetch(req))
+    caches.match(req).then((emCache) => {
+      const daRede = fetch(req).then((res) => {
+        if (res && res.ok) {
+          const copia = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copia));
+        }
+        return res;
+      }).catch(() => emCache);
+
+      return emCache || daRede;
+    })
   );
 });
