@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Aluno - Ofício da História</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="assets/app-icon.png">
     <link rel="apple-touch-icon" href="assets/app-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -86,6 +87,13 @@
         // Se já houver sessão ativa, manda direto para o painel do aluno
         if (localStorage.getItem('oficio_session_user')) {
             window.location.href = 'index.html';
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .catch(err => console.error('Erro ao registrar SW:', err));
+            });
         }
 
         // Alternar visibilidade da senha com os novos Ícones
