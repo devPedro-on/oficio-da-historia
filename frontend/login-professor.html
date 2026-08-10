@@ -80,7 +80,9 @@
     </div>
 
     <script>
-        if (localStorage.getItem('oficio_session_role') === 'teacher') {
+        const API_BASE = "https://oficio-backend-jg09.onrender.com/api";
+
+        if (localStorage.getItem('oficio_teacher_token')) {
             window.location.href = 'teacher.html';
         }
 
@@ -108,11 +110,11 @@
             e.target.value = value;
         });
 
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const cpfDigitado = document.getElementById('cpf').value.replace(/\D/g, "");
-            const password = document.getElementById('password').value;
+
+            const cpf = document.getElementById('cpf').value.replace(/\D/g, "");
+            const senha = document.getElementById('password').value;
             const errorDiv = document.getElementById('error-message');
             const btn = document.getElementById('login-btn');
 
@@ -120,11 +122,23 @@
             btn.disabled = true;
             errorDiv.classList.add('hidden');
 
-            if (cpfDigitado === '34773665068' && password === 'admin123') {
-                errorDiv.classList.add('hidden');
-                localStorage.setItem('oficio_session_role', 'teacher');
-                window.location.href = 'teacher.html';
-            } else {
+            try {
+                const response = await fetch(`${API_BASE}/teacher/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cpf, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    localStorage.setItem('oficio_teacher_token', data.token);
+                    window.location.href = 'teacher.html';
+                } else {
+                    throw new Error(data.error || 'Credenciais administrativas inválidas.');
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message || "Erro ao conectar com o servidor.";
                 errorDiv.classList.remove('hidden');
                 document.getElementById('password').value = '';
                 btn.innerText = "Autenticar Painel Master";
