@@ -8,7 +8,7 @@
   "description": "Plataforma imersiva de cursos e quadrinhos históricos.",
   "icons": [
     {
-      "src": "frontend/assets/oficio-historia-logo.png",
+      "src": "frontend/assets/app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
