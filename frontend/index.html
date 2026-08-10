@@ -6,32 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Portal de estudos e biblioteca de quadrinhos históricos do Ofício da História.">
     <title>Painel do Aluno - Oficio da História</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <link rel="icon" href="assets/oficio-historia-logo.png">
     <link rel="stylesheet" href="style.css">
-    <style> .bg-premium-gradient { background: radial-gradient(circle at top, #1a2333 0%, #0b0f17 70%); } </style>
+    <link rel="stylesheet" href="papyrus-theme.css">
 </head>
-<body class="bg-history-bg text-slate-100 min-h-screen bg-premium-gradient font-sans">
+<body class="text-slate-100 min-h-screen papyrus-page font-sans">
 
-    <nav class="border-b border-slate-800 bg-history-bg/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-        <span class="text-2xl font-serif font-bold tracking-wider text-history-gold">🏛️ OFÍCIO DA HISTÓRIA</span>
+    <nav class="border-b border-slate-800 papyrus-nav sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <span class="text-2xl font-serif font-bold tracking-wider text-history-gold flex items-center gap-3">
+            <span class="brand-seal brand-seal-sm"></span> OFÍCIO DA HISTÓRIA
+        </span>
         <div class="flex items-center gap-4">
             <div class="text-right">
                 <span class="block text-sm font-medium text-history-textMuted">Olá, Estudante</span>
-                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">Sair da conta</button>
+                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-700 hover:text-red-800 transition-colors">Sair da conta</button>
             </div>
             <div id="user-avatar" class="w-10 h-10 rounded-full border-2 border-history-gold bg-slate-700 flex items-center justify-center font-bold text-history-gold">H</div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
-        <div id="error-banner" class="hidden bg-red-950/40 border border-red-500/40 text-red-200 p-4 rounded-xl text-center font-medium">
+        <div id="error-banner" class="hidden bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl text-center font-medium">
             ⚠️ Não foi possível carregar os dados do servidor. Verifique a conexão.
         </div>
 
-        <div id="live-banner" class="hidden bg-amber-950/40 border border-history-gold/40 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-amber-950/10">
+        <div id="live-banner" class="hidden bg-amber-100 border border-history-gold/50 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-amber-950/10">
             <div class="space-y-1">
                 <div class="flex items-center gap-2 text-red-500 font-semibold tracking-wider text-xs uppercase"><span class="h-2 w-2 rounded-full bg-red-500 inline-block animate-ping"></span> Aula Ao Vivo Agora</div>
-                <h2 id="live-title" class="text-xl font-bold font-serif text-white"></h2>
+                <h2 id="live-title" class="text-xl font-bold font-serif text-history-bg"></h2>
                 <p id="live-description" class="text-sm text-history-textMuted"></p>
             </div>
             <button id="meet-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg transition-all">⚔️ Entrar no Google Meet</button>
@@ -97,15 +99,15 @@
                     document.getElementById('courses-container').innerHTML = data.courses.map(c => {
                         const titulo = c.title || c.nome || "Curso sem título";
                         return `
-                            <div class="bg-[#111827] border border-slate-700 rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition-all hover:border-history-gold">
+                            <div class="bg-history-card border border-slate-700 rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition-all hover:border-history-gold">
                                 <div>
-                                    <h3 class="text-xl font-bold text-white mb-1">${titulo}</h3>
+                                    <h3 class="text-xl font-bold text-history-bg mb-1">${titulo}</h3>
                                     <p class="text-sm text-slate-400">
                                         ${isLive ? "A transmissão está liberada!" : "Curso ao vivo — Acesso liberado pelo professor no momento da transmissão."}
                                     </p>
                                 </div>
-                                
-                                <div class="mt-4 md:mt-0 flex items-center space-x-2 bg-[#0B0F17] px-4 py-2 rounded-full border border-slate-800">
+
+                                <div class="mt-4 md:mt-0 flex items-center space-x-2 bg-history-input px-4 py-2 rounded-full border border-slate-800">
                                     <span class="relative flex h-3 w-3">
                                         ${isLive 
                                             ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>' 
@@ -147,7 +149,7 @@
         loadDashboard();
     </script>
 
-    <footer class="border-t border-slate-800 bg-history-bg py-8 mt-12">
+    <footer class="border-t border-slate-800 papyrus-footer py-8 mt-12">
     <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
         <div class="text-center md:text-left">
             <p>&copy; 2026 Ofício da História. Todos os direitos reservados.</p>
