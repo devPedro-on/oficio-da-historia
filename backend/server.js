@@ -85,9 +85,9 @@ app.get('/api/dashboard', async (req, res) => {
         const { data: comics, error: comicsError } = await supabase.from('quadrinhos').select('*');
         if (comicsError) throw comicsError;
 
-        // 3. Busca o estado real da live na tabela com acento
+        // 3. Busca o estado real da live
         const { data: liveData, error: liveError } = await supabase
-            .from('configurações')
+            .from('config_live')
             .select('*')
             .eq('id', 1)
             .single();
