@@ -147,6 +147,14 @@
         }
         
         loadDashboard();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado!', reg))
+                    .catch(err => console.error('Erro ao registrar SW:', err));
+            });
+        }
     </script>
 
     <footer class="border-t border-slate-800 papyrus-footer py-8 mt-12">
