@@ -1,17 +1,24 @@
 {
   "name": "Ofício da História",
   "short_name": "OfícioHistória",
-  "start_url": "/frontend/index.html",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#E9D9AC",
   "theme_color": "#A9791F",
   "description": "Plataforma imersiva de cursos e quadrinhos históricos.",
   "icons": [
     {
-      "src": "frontend/assets/app-icon.png",
+      "src": "assets/app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
