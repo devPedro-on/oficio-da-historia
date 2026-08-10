@@ -42,6 +42,25 @@
     margin: 0 auto;
 }
 
+/* O autopreenchimento do Chrome pinta o campo de azul e ignora background-color.
+   O único jeito de vencer isso é cobrir o fundo com um box-shadow interno. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: inset 0 0 0 1000px #FBF6E8 !important;
+    box-shadow: inset 0 0 0 1000px #FBF6E8 !important;
+    -webkit-text-fill-color: #2B1F10 !important;
+    caret-color: #2B1F10;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Firefox */
+input:autofill {
+    background-color: #FBF6E8 !important;
+    color: #2B1F10 !important;
+}
+
 /* Scrollbar temática (substitui o custom-scrollbar escuro do painel master) */
 .custom-scrollbar::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
