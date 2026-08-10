@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login do Professor - Ofício da História</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <link rel="icon" href="assets/oficio-historia-logo.png">
+    <link rel="stylesheet" href="papyrus-theme.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,46 +13,45 @@
                 extend: {
                     colors: {
                         history: {
-                            bg: '#0B0F17',
-                            card: '#131A26',
-                            gold: '#D4AF37',
-                            goldHover: '#AA8417',
-                            textMuted: '#94A3B8'
+                            bg: '#2B1D0F',
+                            card: '#F1E3BC',
+                            gold: '#A9791F',
+                            goldHover: '#7C5915',
+                            textMuted: '#6C5735',
+                            input: '#FBF6E8'
+                        },
+                        slate: {
+                            100: '#2B1F10', 200: '#3C2E19', 300: '#5B4726', 400: '#8A6F45',
+                            500: '#9C7F4E', 600: '#B79A61', 700: '#D8C28A', 800: '#E7D8AE', 900: '#F3E9D0'
                         }
                     }
                 }
             }
         }
     </script>
-    <style>
-        .bg-premium-gradient {
-            background: radial-gradient(circle at center, #241919 0%, #0b0f17 100%);
-        }
-    </style>
 </head>
-<body class="bg-history-bg text-slate-100 min-h-screen bg-premium-gradient flex flex-col justify-center items-center px-4 font-sans">
+<body class="text-slate-100 min-h-screen papyrus-page flex flex-col justify-center items-center px-4 font-sans">
 
-    <div class="w-full max-w-md bg-history-card border border-red-950/40 rounded-2xl p-8 shadow-2xl space-y-6">
+    <div class="w-full max-w-md bg-history-card border border-red-900/30 rounded-2xl p-8 shadow-2xl space-y-6">
         <div class="text-center space-y-2">
-            <h1 class="text-3xl font-serif font-bold tracking-wider text-red-400">🏛️</h1>
-            <h2 class="text-2xl font-serif font-bold tracking-tight text-white">Ofício da História</h2>
-            <p class="text-xs text-red-400 uppercase tracking-widest font-semibold">Controle do Professor</p>
+            <img src="assets/oficio-historia-logo.png" alt="Ofício da História" class="brand-logo-full">
+            <p class="text-xs text-red-800 uppercase tracking-widest font-semibold">Controle do Professor</p>
         </div>
 
-        <div id="error-message" class="hidden bg-red-950/80 text-red-400 border border-red-500/30 p-3 rounded-lg text-xs text-center font-medium">
+        <div id="error-message" class="hidden bg-red-100 text-red-800 border border-red-300 p-3 rounded-lg text-xs text-center font-medium">
             Acesso negado. Credenciais administrativas inválidas.
         </div>
 
         <form id="login-form" class="space-y-4">
             <div class="space-y-1">
                 <label for="cpf" class="text-xs font-semibold text-history-textMuted uppercase tracking-wider">CPF Administrativo</label>
-                <input type="text" id="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
+                <input type="text" id="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full bg-history-input border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 text-slate-100 placeholder-slate-600 transition-colors" required>
             </div>
 
             <div class="space-y-1">
                 <label for="password" class="text-xs font-semibold text-history-textMuted uppercase tracking-wider">Senha Master</label>
                 <div class="relative">
-                    <input type="password" id="password" placeholder="••••••••" class="w-full bg-[#0B0F17] border border-slate-700 rounded-lg p-3 pr-10 text-sm focus:outline-none focus:border-red-500 text-white placeholder-slate-600 transition-colors" required>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full bg-history-input border border-slate-700 rounded-lg p-3 pr-10 text-sm focus:outline-none focus:border-red-500 text-slate-100 placeholder-slate-600 transition-colors" required>
                     <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400 transition-colors select-none flex items-center justify-center">
                         <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

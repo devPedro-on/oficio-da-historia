@@ -3,12 +3,12 @@
   "short_name": "OfícioHistória",
   "start_url": "/frontend/index.html",
   "display": "standalone",
-  "background_color": "#0B0F17",
-  "theme_color": "#D4AF37",
+  "background_color": "#E9D9AC",
+  "theme_color": "#A9791F",
   "description": "Plataforma imersiva de cursos e quadrinhos históricos.",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2234/2234655.png",
+      "src": "frontend/assets/oficio-historia-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
