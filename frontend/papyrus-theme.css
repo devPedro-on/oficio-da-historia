@@ -25,9 +25,10 @@
     display: inline-block;
     border-radius: 50%;
     background-color: #E9D9AC;
-    background-image: url("assets/oficio-historia-logo.png");
-    background-size: 250% 250%;
-    background-position: 57% 13%;
+    /* selo.png já é o recorte do símbolo, então dispensa o enquadramento por CSS */
+    background-image: url("assets/selo.png");
+    background-size: cover;
+    background-position: center;
     box-shadow: inset 0 0 0 1.5px rgba(169,121,31,.5), 0 2px 5px rgba(59,42,24,.3);
     flex-shrink: 0;
 }

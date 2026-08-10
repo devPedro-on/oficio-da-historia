@@ -1,10 +1,12 @@
 // A raiz publicada no Vercel é a pasta frontend/, então os caminhos aqui partem dela.
-const CACHE_NAME = 'oficio-v3';
+const CACHE_NAME = 'oficio-v4';
 const ASSETS = [
   '/index.html',
   '/login-aluno.html',
   '/style.css',
   '/papyrus-theme.css',
+  '/assets/selo.png',
+  '/assets/logo-login.jpg',
   '/assets/app-icon.png',
   '/manifest.json'
 ];
