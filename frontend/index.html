@@ -12,6 +12,15 @@
     <meta name="apple-mobile-web-app-title" content="Ofício da História">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="papyrus-theme.css">
+    <script>
+        // Marca a página quando o app está rodando instalado, para esconder o que é
+        // só do site. Roda aqui no head para o rodapé não piscar antes de sumir.
+        if (window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.navigator.standalone === true) {
+            document.documentElement.classList.add('pwa-instalado');
+        }
+    </script>
 </head>
 <body class="text-slate-100 min-h-screen papyrus-page font-sans">
 
@@ -160,7 +169,7 @@
         }
     </script>
 
-    <footer class="border-t border-slate-800 papyrus-footer py-8 mt-12">
+    <footer class="apenas-no-navegador border-t border-slate-800 papyrus-footer py-8 mt-12">
     <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
         <div class="text-center md:text-left">
             <p>&copy; 2026 Ofício da História. Todos os direitos reservados.</p>

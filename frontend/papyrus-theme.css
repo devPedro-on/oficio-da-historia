@@ -42,6 +42,16 @@
     margin: 0 auto;
 }
 
+/* Elementos que só fazem sentido no navegador (rodapé institucional, links de site)
+   e devem sumir quando o PWA roda instalado, em tela cheia.
+   Use a classe .apenas-no-navegador no elemento. */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+    .apenas-no-navegador { display: none !important; }
+}
+
+/* iOS mais antigo não entende display-mode; lá a marcação vem por JS (navigator.standalone) */
+html.pwa-instalado .apenas-no-navegador { display: none !important; }
+
 /* O autopreenchimento do Chrome pinta o campo de azul e ignora background-color.
    O único jeito de vencer isso é cobrir o fundo com um box-shadow interno. */
 input:-webkit-autofill,
