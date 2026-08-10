@@ -1,8 +1,8 @@
 const CACHE_NAME = 'oficio-v1';
 const ASSETS = [
-  'index.html',
-  'comics.html',
-  'manifest.json'
+  '/frontend/index.html',
+  '/frontend/comics.html',
+  '/manifest.json'
 ];
 
 // Instala o Service Worker e guarda os ficheiros essenciais em cache
