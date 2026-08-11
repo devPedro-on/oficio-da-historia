@@ -138,12 +138,18 @@
                 if (data.comics && data.comics.length > 0) {
                     document.getElementById('comics-container').innerHTML = data.comics.map(hq => {
                         const titulo = hq.title || hq.nome || hq.titulo || "Sem título";
-                        const capaOtimizada = `${hq.cover}?width=300&height=400&format=webp`;
-                        const capa = hq.cover || hq.capa || "https://via.placeholder.com/150";
-                        const linkPdf = hq.pdf_url || hq.pdf || hq.link || "#";
+                        const capa = hq.cover || hq.capa || "";
+                        // A otimização precisa sair da capa já com fallback aplicado, senão
+                        // uma HQ sem capa vira a URL "undefined?width=..." e quebra a imagem.
+                        const capaOtimizada = capa ? `${capa}?width=300&height=400&format=webp` : "assets/app-icon.png";
+                        const linkPdf = hq.pdf_url || hq.pdf || hq.link || "";
                         console.log("HQ:", titulo, "Link encontrado:", linkPdf);
+                        // Abre no leitor interno: com target="_blank" o aluno saía do app instalado.
+                        const destino = linkPdf
+                            ? `comics.html?pdf=${encodeURIComponent(linkPdf)}&title=${encodeURIComponent(titulo)}`
+                            : "#";
                             return `
-                                <a href="${linkPdf}" target="_blank" rel="noopener noreferrer" class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold block transition-colors">
+                                <a href="${destino}" class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold block transition-colors">
                                     <img src="${capaOtimizada}" loading="lazy" class="rounded-lg mb-2 w-full object-cover aspect-[3/4]" alt="${titulo}">
                                     <h5 class="text-sm font-bold">${titulo}</h5>
                                 </a>`;
