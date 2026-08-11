@@ -3,92 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ofício da História — Leitor de HQ</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        history: {
-                            bg: '#0B0F17',
-                            card: '#131A26',
-                            gold: '#D4AF37',
-                            textMuted: '#94A3B8'
-                        }
-                    }
-                }
-            }
+    <title>Leitor de HQ — Ofício da História</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="assets/app-icon.png">
+    <link rel="apple-touch-icon" href="assets/app-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Ofício da História">
+    <!-- Usa o style.css compilado, como o index.html: sem CDN e sem uma quarta cópia da
+         paleta para manter em sincronia. Depois de mexer nas classes desta página, rode
+         o build do Tailwind (ver HANDOFF, seção 3). -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="papyrus-theme.css">
+    <style>
+        /* A página do PDF é desenhada num canvas; a moldura imita uma folha sobre o papiro.
+           Sem max-width aqui de propósito: com o zoom, a página precisa passar da largura
+           da tela e ser alcançada pela rolagem da moldura. */
+        /* O :not(.hidden) é necessário: um seletor de id vence a classe .hidden do Tailwind,
+           e sem isso o canvas vazio apareceria embaixo do "Abrindo a HQ…". */
+        #pagina-canvas:not(.hidden) {
+            display: block;
+            margin: 0 auto;
+            height: auto;
+            border-radius: 6px;
+            background-color: #FBF6E8;
+            box-shadow: 0 6px 20px rgba(59, 42, 24, .35);
         }
-    </script>
+        #moldura { overflow-x: auto; width: 100%; }
+        /* Evita que o navegador trate o arrastar horizontal como gesto de voltar. */
+        #area-leitura { touch-action: pan-y pinch-zoom; }
+    </style>
 </head>
-<body class="bg-history-bg text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+<body class="text-slate-100 min-h-screen papyrus-page font-sans flex flex-col">
 
-    <header class="border-b border-slate-800 bg-history-bg/90 p-4 flex justify-between items-center px-6">
-        <button onclick="window.location.href='index.html'" class="text-sm font-medium text-history-textMuted hover:text-history-gold transition-colors flex items-center gap-2">
-            🏛️ Voltar ao Painel
-        </button>
-        <div class="text-center">
-            <span id="hq-series" class="text-[10px] text-history-gold uppercase font-bold block tracking-widest">SÉRIE</span>
-            <h1 id="hq-title" class="font-serif font-bold text-lg">Carregando...</h1>
+    <nav class="border-b border-slate-800 papyrus-nav sticky top-0 z-50 px-4 sm:px-6 py-3 flex justify-between items-center gap-3">
+        <a href="index.html" class="text-sm font-medium text-history-textMuted hover:text-history-gold transition-colors flex items-center gap-2 shrink-0">
+            <span class="brand-seal brand-seal-sm"></span>
+            <span class="hidden sm:inline">Voltar ao painel</span>
+        </a>
+        <h1 id="hq-titulo" class="font-serif font-bold text-base sm:text-lg text-center truncate">Carregando…</h1>
+        <div class="w-10 sm:w-32 shrink-0"></div>
+    </nav>
+
+    <main id="area-leitura" class="flex-1 flex flex-col items-center justify-center p-4 gap-4 w-full">
+
+        <div id="estado-carregando" class="text-center space-y-3 py-16">
+            <div class="w-10 h-10 border-[3px] border-slate-700 border-t-history-gold rounded-full animate-spin mx-auto"></div>
+            <p class="text-sm text-history-textMuted">Abrindo a HQ…</p>
         </div>
-        <div class="w-20"></div> </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-4 max-w-2xl mx-auto w-full">
-        <div class="bg-history-card border border-slate-800 rounded-xl p-2 shadow-2xl relative w-full group overflow-hidden">
-            <img id="hq-page-img" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80" alt="Página da HQ" class="w-full h-auto max-h-[70vh] object-contain rounded-lg transition-all duration-300">
-            
-            <div onclick="prevPage()" class="absolute top-0 left-0 w-1/4 h-full cursor-w-resize flex items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-black/50 to-transparent">
-                <span class="text-2xl text-history-gold">◀</span>
+        <div id="estado-erro" class="hidden text-center space-y-4 py-16 max-w-md">
+            <p class="text-2xl">📜</p>
+            <p id="erro-texto" class="text-sm text-history-textMuted">Não foi possível abrir esta HQ.</p>
+            <a id="erro-link" href="#" target="_blank" rel="noopener noreferrer"
+               class="hidden inline-block bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                Abrir o PDF em nova aba
+            </a>
+            <div>
+                <a href="index.html" class="text-xs text-history-textMuted hover:text-history-gold transition-colors">← Voltar ao painel</a>
             </div>
-            <div onclick="nextPage()" class="absolute top-0 right-0 w-1/4 h-full cursor-e-resize flex items-center justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-l from-black/50 to-transparent">
-                <span class="text-2xl text-history-gold">▶</span>
-            </div>
+        </div>
+
+        <div id="moldura">
+            <canvas id="pagina-canvas" class="hidden"></canvas>
         </div>
     </main>
 
-    <footer class="border-t border-slate-800 bg-history-bg p-4 flex flex-col sm:flex-row justify-between items-center px-6 gap-4">
-        <button onclick="prevPage()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-sm px-4 py-2 rounded-lg font-medium transition-colors">Página Anterior</button>
-        <span id="page-indicator" class="text-sm font-serif text-history-textMuted font-medium">Pág 1 de 3</span>
-        <button onclick="nextPage()" class="w-full sm:w-auto bg-history-gold hover:bg-amber-600 text-slate-900 text-sm px-4 py-2 rounded-lg font-bold transition-colors">Próxima Página</button>
+    <footer id="controles" class="hidden border-t border-slate-800 papyrus-footer px-4 sm:px-6 py-3 sticky bottom-0 z-40">
+        <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            <button id="btn-anterior" class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg font-medium transition-colors">
+                ◀<span class="hidden sm:inline"> Anterior</span>
+            </button>
+
+            <div class="flex items-center gap-2 text-sm font-serif text-history-textMuted">
+                <label for="campo-pagina" class="sr-only">Ir para a página</label>
+                <input id="campo-pagina" type="number" min="1" value="1" inputmode="numeric"
+                       class="w-14 bg-history-input border border-slate-700 rounded-lg py-1 text-center text-slate-100 focus:outline-none focus:border-history-gold transition-colors">
+                <span>de <span id="total-paginas">?</span></span>
+            </div>
+
+            <div class="flex items-center gap-1">
+                <button id="btn-menos-zoom" title="Diminuir zoom" class="bg-slate-800 hover:bg-slate-700 text-sm w-9 h-9 rounded-lg font-bold transition-colors">−</button>
+                <button id="btn-mais-zoom" title="Aumentar zoom" class="bg-slate-800 hover:bg-slate-700 text-sm w-9 h-9 rounded-lg font-bold transition-colors">+</button>
+            </div>
+
+            <button id="btn-proxima" class="bg-history-gold hover:bg-history-goldHover text-history-bg text-sm px-4 py-2 rounded-lg font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                <span class="hidden sm:inline">Próxima </span>▶
+            </button>
+        </div>
     </footer>
 
     <script>
-        // Simulação das páginas do quadrinho (Substituível por URLs do Supabase no futuro)
-        const dummyPages = [
-            "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80", // Página 1 (Capa)
-            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80", // Página 2
-            "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80"  // Página 3
-        ];
-
-        let currentPageIndex = 0;
-
-        function updateHQView() {
-            document.getElementById('hq-page-img').src = dummyPages[currentPageIndex];
-            document.getElementById('page-indicator').innerText = `Pág ${currentPageIndex + 1} de ${dummyPages.length}`;
+        // Marca a página quando o app roda instalado (mesma lógica do index.html).
+        if (window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.navigator.standalone === true) {
+            document.documentElement.classList.add('pwa-instalado');
         }
 
-        function nextPage() {
-            if (currentPageIndex < dummyPages.length - 1) {
-                currentPageIndex++;
-                updateHQView();
+        // O leitor é área logada, como o painel.
+        if (!localStorage.getItem('oficio_session_user')) {
+            window.location.href = 'login-aluno.html';
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .catch(err => console.error('Erro ao registrar SW:', err));
+            });
+        }
+    </script>
+
+    <script type="module">
+        import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+
+        // jsDelivr serve o pacote inteiro do pdfjs-dist. O cdnjs só publica os arquivos de
+        // build, sem standard_fonts/ e cmaps/ — sem eles, PDF com fonte não embutida ou
+        // texto CJK renderiza em branco, sem erro nenhum no console.
+        const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/';
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_BASE}build/pdf.worker.min.mjs`;
+
+        const params = new URLSearchParams(window.location.search);
+        const urlPdf = params.get('pdf') || '';
+        const titulo = params.get('title') || 'HQ';
+
+        const elCanvas = document.getElementById('pagina-canvas');
+        const elCarregando = document.getElementById('estado-carregando');
+        const elErro = document.getElementById('estado-erro');
+        const elErroTexto = document.getElementById('erro-texto');
+        const elErroLink = document.getElementById('erro-link');
+        const elControles = document.getElementById('controles');
+        const elCampoPagina = document.getElementById('campo-pagina');
+        const elTotal = document.getElementById('total-paginas');
+        const btnAnterior = document.getElementById('btn-anterior');
+        const btnProxima = document.getElementById('btn-proxima');
+
+        document.getElementById('hq-titulo').innerText = titulo;
+        document.title = `${titulo} — Ofício da História`;
+
+        let documento = null;
+        let paginaAtual = 1;
+        let zoom = 1;              // 1 = página ajustada à largura disponível
+        let tarefaRender = null;   // render em andamento, para cancelar antes do próximo
+
+        function mostrarErro(mensagem, ofereceLink) {
+            elCarregando.classList.add('hidden');
+            elCanvas.classList.add('hidden');
+            elControles.classList.add('hidden');
+            elErroTexto.innerText = mensagem;
+            if (ofereceLink && urlPdf) {
+                elErroLink.href = urlPdf;
+                elErroLink.classList.remove('hidden');
+            }
+            elErro.classList.remove('hidden');
+        }
+
+        // Só renderiza PDF vindo do Storage do projeto ou da própria origem. Sem isso,
+        // qualquer link com ?pdf= faria o leitor buscar e exibir arquivo de terceiros.
+        function origemConfiavel(url) {
+            try {
+                const alvo = new URL(url, window.location.href);
+                if (alvo.origin === window.location.origin) return true;
+                return alvo.protocol === 'https:' && alvo.hostname.endsWith('.supabase.co');
+            } catch {
+                return false;
             }
         }
 
-        function prevPage() {
-            if (currentPageIndex > 0) {
-                currentPageIndex--;
-                updateHQView();
+        async function desenharPagina(numero) {
+            const pagina = await documento.getPage(numero);
+
+            // A moldura já vem sem o padding do <main>, então a largura dela é o espaço útil.
+            const larguraDisponivel = Math.max(240, document.getElementById('moldura').clientWidth);
+            const escalaAjuste = larguraDisponivel / pagina.getViewport({ scale: 1 }).width;
+            const viewport = pagina.getViewport({ scale: escalaAjuste * zoom });
+
+            // Desenha na resolução real da tela para o texto não sair borrado no celular.
+            const dpr = window.devicePixelRatio || 1;
+            const ctx = elCanvas.getContext('2d');
+            elCanvas.width = Math.floor(viewport.width * dpr);
+            elCanvas.height = Math.floor(viewport.height * dpr);
+            elCanvas.style.width = `${Math.floor(viewport.width)}px`;
+
+            if (tarefaRender) tarefaRender.cancel();
+            tarefaRender = pagina.render({
+                canvasContext: ctx,
+                viewport,
+                transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
+            });
+
+            try {
+                await tarefaRender.promise;
+            } catch (err) {
+                // Cancelamento é esperado quando o aluno vira a página rápido.
+                if (err?.name !== 'RenderingCancelledException') throw err;
             }
         }
 
-        // Recupera dados básicos passados por parâmetro ou carrega padrão
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            document.getElementById('hq-title').innerText = urlParams.get('title') || "Capítulo 1: O Cerco";
-            document.getElementById('hq-series').innerText = urlParams.get('series') || "Crônicas de Wessex";
-            updateHQView();
+        async function irPara(numero) {
+            if (!documento) return;
+            const alvo = Math.min(Math.max(1, numero), documento.numPages);
+            paginaAtual = alvo;
+            elCampoPagina.value = alvo;
+            btnAnterior.disabled = alvo === 1;
+            btnProxima.disabled = alvo === documento.numPages;
+            try {
+                await desenharPagina(alvo);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                console.error('Erro ao desenhar a página:', err);
+                mostrarErro('Não foi possível desenhar esta página da HQ.', true);
+            }
+        }
+
+        async function abrir() {
+            if (!urlPdf) {
+                mostrarErro('Nenhuma HQ foi indicada. Escolha uma na biblioteca do painel.', false);
+                return;
+            }
+            if (!origemConfiavel(urlPdf)) {
+                mostrarErro('Este arquivo não vem da biblioteca do Ofício da História, então não será aberto.', false);
+                return;
+            }
+
+            try {
+                documento = await pdfjsLib.getDocument({
+                    url: urlPdf,
+                    // Mitiga execução de script embutido em PDF (CVE-2024-4367 e parentes).
+                    isEvalSupported: false,
+                    standardFontDataUrl: `${PDFJS_BASE}standard_fonts/`,
+                    cMapUrl: `${PDFJS_BASE}cmaps/`,
+                    cMapPacked: true
+                }).promise;
+
+                elTotal.innerText = documento.numPages;
+                elCampoPagina.max = documento.numPages;
+                elCarregando.classList.add('hidden');
+                elCanvas.classList.remove('hidden');
+                elControles.classList.remove('hidden');
+                await irPara(1);
+            } catch (err) {
+                console.error('Erro ao abrir o PDF:', err);
+                mostrarErro('Não foi possível abrir esta HQ. Verifique sua conexão.', true);
+            }
+        }
+
+        btnAnterior.addEventListener('click', () => irPara(paginaAtual - 1));
+        btnProxima.addEventListener('click', () => irPara(paginaAtual + 1));
+        elCampoPagina.addEventListener('change', () => irPara(parseInt(elCampoPagina.value, 10) || 1));
+
+        document.getElementById('btn-mais-zoom').addEventListener('click', () => {
+            zoom = Math.min(3, zoom + 0.25);
+            irPara(paginaAtual);
         });
+        document.getElementById('btn-menos-zoom').addEventListener('click', () => {
+            zoom = Math.max(0.5, zoom - 0.25);
+            irPara(paginaAtual);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target === elCampoPagina) return;
+            if (e.key === 'ArrowRight' || e.key === 'PageDown') irPara(paginaAtual + 1);
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') irPara(paginaAtual - 1);
+        });
+
+        // Virar página arrastando o dedo, como num gibi.
+        let toqueX = null;
+        const area = document.getElementById('area-leitura');
+        area.addEventListener('touchstart', (e) => { toqueX = e.changedTouches[0].clientX; }, { passive: true });
+        area.addEventListener('touchend', (e) => {
+            if (toqueX === null) return;
+            const distancia = e.changedTouches[0].clientX - toqueX;
+            if (Math.abs(distancia) > 60) irPara(paginaAtual + (distancia < 0 ? 1 : -1));
+            toqueX = null;
+        }, { passive: true });
+
+        // Girar o celular muda a largura disponível: redesenha a página atual.
+        let esperaResize;
+        window.addEventListener('resize', () => {
+            clearTimeout(esperaResize);
+            esperaResize = setTimeout(() => { if (documento) desenharPagina(paginaAtual); }, 200);
+        });
+
+        abrir();
+    </script>
+
+    <script>
+        // Navegadores antigos ignoram type="module": sem isso a tela ficaria girando para sempre.
+        if (!('noModule' in HTMLScriptElement.prototype)) {
+            const params = new URLSearchParams(window.location.search);
+            const pdf = params.get('pdf');
+            document.getElementById('estado-carregando').classList.add('hidden');
+            document.getElementById('erro-texto').innerText = 'Seu navegador não abre o leitor embutido.';
+            if (pdf) {
+                const link = document.getElementById('erro-link');
+                link.href = pdf;
+                link.classList.remove('hidden');
+            }
+            document.getElementById('estado-erro').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
