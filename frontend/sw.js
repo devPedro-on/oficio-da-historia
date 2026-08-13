@@ -61,9 +61,14 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(req).then((emCache) => {
       const daRede = fetch(req).then((res) => {
-        if (res && res.ok) {
+        // Só 200: cache.put recusa respostas parciais (206), e res.ok as aceita.
+        // Hoje o Storage do Supabase devolve o PDF inteiro, mas se um dia passar a
+        // honrar Range, isto evita uma promessa rejeitada a cada leitura.
+        if (res && res.status === 200) {
           const copia = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copia));
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.put(req, copia))
+            .catch((err) => console.warn('Não foi possível cachear', req.url, err));
         }
         return res;
       }).catch(() => emCache);
