@@ -8,6 +8,13 @@
   --color-history-textMuted: #6C5735;
   --color-history-input: #FBF6E8;
 
+  /* Cores semânticas amostradas da própria logo (assets/logo-login.jpg):
+     o vinho é o "HISTÓRIA" do letreiro e marca o que está acontecendo agora.
+     Antes a página usava red-500/green-500 do Tailwind puro, que destoam do sépia. */
+  --color-history-wine: #6D1C10;
+  --color-history-wineHover: #55150C;
+  --color-history-olive: #5A6B3A;
+
   --color-slate-100: #2B1F10;
   --color-slate-200: #3C2E19;
   --color-slate-300: #5B4726;

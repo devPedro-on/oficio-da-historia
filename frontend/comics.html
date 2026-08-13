@@ -127,6 +127,32 @@
         const urlPdf = params.get('pdf') || '';
         const titulo = params.get('title') || 'HQ';
 
+        // Onde o aluno parou, por HQ. O painel lê isto para montar "Retomar a leitura".
+        // Fica no aparelho: trocar de celular recomeça a contagem.
+        const CHAVE_LEITURA = 'oficio_leitura';
+
+        function lerLeituras() {
+            try { return JSON.parse(localStorage.getItem(CHAVE_LEITURA)) || {}; }
+            catch (e) { return {}; }
+        }
+
+        function salvarProgresso(pagina, total) {
+            if (!urlPdf || !total) return;
+            try {
+                const tudo = lerLeituras();
+                tudo[urlPdf] = { pagina, total, titulo, em: Date.now() };
+                localStorage.setItem(CHAVE_LEITURA, JSON.stringify(tudo));
+            } catch (e) {
+                // Cota cheia ou modo privado: não vale derrubar a leitura por causa disso.
+                console.warn('Não foi possível gravar o progresso:', e);
+            }
+        }
+
+        function paginaSalva() {
+            const registro = lerLeituras()[urlPdf];
+            return registro && registro.pagina ? registro.pagina : 1;
+        }
+
         const elCanvas = document.getElementById('pagina-canvas');
         const elCarregando = document.getElementById('estado-carregando');
         const elErro = document.getElementById('estado-erro');
@@ -209,6 +235,9 @@
             btnProxima.disabled = alvo === documento.numPages;
             try {
                 await desenharPagina(alvo);
+                // Virando página rápido, um render cancelado pode terminar depois do
+                // seguinte. Sem esta guarda, ele regravaria uma página já ultrapassada.
+                if (alvo === paginaAtual) salvarProgresso(alvo, documento.numPages);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (err) {
                 console.error('Erro ao desenhar a página:', err);
@@ -241,7 +270,8 @@
                 elCarregando.classList.add('hidden');
                 elCanvas.classList.remove('hidden');
                 elControles.classList.remove('hidden');
-                await irPara(1);
+                // Reabre na página onde o aluno parou, não no começo.
+                await irPara(paginaSalva());
             } catch (err) {
                 console.error('Erro ao abrir o PDF:', err);
                 mostrarErro('Não foi possível abrir esta HQ. Verifique sua conexão.', true);
