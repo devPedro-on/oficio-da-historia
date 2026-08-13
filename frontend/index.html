@@ -24,41 +24,56 @@
 </head>
 <body class="text-slate-100 min-h-screen papyrus-page font-sans">
 
-    <nav class="border-b border-slate-800 papyrus-nav sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-        <span class="text-2xl font-serif font-bold tracking-wider text-history-gold flex items-center gap-3">
-            <span class="brand-seal brand-seal-sm"></span> OFÍCIO DA HISTÓRIA
+    <nav class="border-b border-slate-800 papyrus-nav sticky top-0 z-50 px-4 sm:px-6 py-3 flex justify-between items-center gap-3">
+        <span class="flex items-center gap-3 min-w-0">
+            <span class="brand-seal brand-seal-sm"></span>
+            <span class="flex flex-col leading-none min-w-0">
+                <span class="font-serif font-semibold text-[0.78rem] tracking-[0.16em] text-slate-100">O OFÍCIO DA</span>
+                <span class="font-serif font-bold text-[1.06rem] tracking-[0.05em] text-history-wine">HISTÓRIA</span>
+            </span>
         </span>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 shrink-0">
             <div class="text-right">
                 <span class="block text-sm font-medium text-history-textMuted">Olá, Estudante</span>
-                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-red-700 hover:text-red-800 transition-colors">Sair da conta</button>
+                <button id="btn-logout" class="text-[10px] uppercase tracking-widest text-history-textMuted hover:text-history-wine transition-colors">Sair da conta</button>
             </div>
-            <div id="user-avatar" class="w-10 h-10 rounded-full border-2 border-history-gold bg-slate-700 flex items-center justify-center font-bold text-history-gold">H</div>
+            <div id="user-avatar" class="w-10 h-10 rounded-full border-2 border-history-gold bg-history-input flex items-center justify-center font-serif font-bold text-history-gold">H</div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-8">
         <div id="error-banner" class="hidden bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl text-center font-medium">
             ⚠️ Não foi possível carregar os dados do servidor. Verifique a conexão.
         </div>
 
-        <div id="live-banner" class="hidden bg-amber-100 border border-history-gold/50 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-amber-950/10">
-            <div class="space-y-1">
-                <div class="flex items-center gap-2 text-red-500 font-semibold tracking-wider text-xs uppercase"><span class="h-2 w-2 rounded-full bg-red-500 inline-block animate-ping"></span> Aula Ao Vivo Agora</div>
-                <h2 id="live-title" class="text-xl font-bold font-serif text-history-bg"></h2>
-                <p id="live-description" class="text-sm text-history-textMuted"></p>
-            </div>
-            <button id="meet-btn" class="bg-history-gold hover:bg-history-goldHover text-history-bg font-bold px-6 py-3 rounded-lg transition-all">⚔️ Entrar no Google Meet</button>
+        <!-- O backend hiberna no plano free do Render. Sem este aviso o aluno encara
+             uma tela em branco por até meio minuto sem saber se o app quebrou. -->
+        <div id="server-notice" class="hidden flex gap-3 items-start text-sm text-history-textMuted bg-history-input/60 border border-slate-700 rounded-xl p-3 leading-relaxed">
+            <span aria-hidden="true">⏳</span>
+            <span>Acordando o servidor — ele hiberna quando ninguém usa e pode levar meio minuto.</span>
         </div>
 
-        <section class="space-y-4">
-            <h2 class="text-lg font-serif font-semibold text-history-gold tracking-wide uppercase border-b border-slate-800 pb-2">Meus Cursos em Andamento</h2>
-            <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        <section id="resume-section" class="hidden space-y-3">
+            <h2 class="text-sm font-serif font-bold text-history-goldHover tracking-[0.13em] uppercase border-b border-slate-800 pb-2">Retomar a leitura</h2>
+            <div id="resume-container"></div>
         </section>
 
-        <section class="space-y-4">
-            <h2 class="text-lg font-serif font-semibold text-history-gold tracking-wide uppercase border-b border-slate-800 pb-2">Biblioteca de Quadrinhos Históricos</h2>
-            <div id="comics-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        <section class="space-y-3">
+            <h2 class="text-sm font-serif font-bold text-history-goldHover tracking-[0.13em] uppercase border-b border-slate-800 pb-2">Aula ao vivo</h2>
+            <div id="live-container"></div>
+        </section>
+
+        <section class="space-y-3">
+            <div class="flex items-baseline justify-between gap-3 border-b border-slate-800 pb-2">
+                <h2 class="text-sm font-serif font-bold text-history-goldHover tracking-[0.13em] uppercase">Estante de quadrinhos</h2>
+                <span id="comics-count" class="text-xs text-history-textMuted tabular-nums"></span>
+            </div>
+            <div id="comics-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-sm font-serif font-bold text-history-goldHover tracking-[0.13em] uppercase border-b border-slate-800 pb-2">Meu curso</h2>
+            <div id="courses-container" class="space-y-3"></div>
         </section>
     </main>
 
@@ -85,85 +100,247 @@
             window.location.href = 'login-aluno.html';
         });
 
+        // Progresso de leitura: gravado pelo leitor (comics.html) e lido aqui.
+        // Mora no localStorage, então acompanha o aparelho, não o aluno.
+        const CHAVE_LEITURA = 'oficio_leitura';
+
+        function lerProgresso() {
+            try { return JSON.parse(localStorage.getItem(CHAVE_LEITURA)) || {}; }
+            catch (e) { return {}; }
+        }
+
+        // Títulos vêm do cadastro do professor; escapar evita que uma aspas
+        // no nome de uma HQ quebre o card inteiro.
+        const escapar = (t) => String(t ?? '').replace(/[&<>"']/g,
+            c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        const linkDaHQ = (hq) => hq.pdf_url || hq.pdf || hq.link || "";
+        const tituloDaHQ = (hq) => hq.title || hq.nome || hq.titulo || "Sem título";
+
+        function destinoLeitor(hq) {
+            const link = linkDaHQ(hq);
+            if (!link) return "#";
+            return `comics.html?pdf=${encodeURIComponent(link)}&title=${encodeURIComponent(tituloDaHQ(hq))}`;
+        }
+
+        function capaDaHQ(hq) {
+            const capa = hq.cover || hq.capa || "";
+            // A otimização precisa sair da capa já com fallback aplicado, senão
+            // uma HQ sem capa vira a URL "undefined?width=..." e quebra a imagem.
+            return capa ? `${capa}?width=300&height=400&format=webp` : "assets/app-icon.png";
+        }
+
+        const ehRecente = (data) => {
+            if (!data) return false;
+            const dias = (Date.now() - new Date(data).getTime()) / 86400000;
+            return dias >= 0 && dias <= 14;
+        };
+
+        // ---------- esqueletos ----------
+        function mostrarEsqueletos() {
+            document.getElementById('live-container').innerHTML = `
+                <div class="bg-history-card/60 border border-slate-700 rounded-xl p-5 space-y-3">
+                    <div class="h-3 w-24 rounded bg-slate-700/60 animate-pulse"></div>
+                    <div class="h-5 w-2/3 rounded bg-slate-700/60 animate-pulse"></div>
+                </div>`;
+
+            document.getElementById('comics-container').innerHTML = Array.from({ length: 5 }).map(() => `
+                <div class="space-y-2">
+                    <div class="rounded-lg bg-slate-700/60 animate-pulse aspect-[3/4]"></div>
+                    <div class="h-2 w-2/5 rounded bg-slate-700/60 animate-pulse"></div>
+                    <div class="h-3 w-3/4 rounded bg-slate-700/60 animate-pulse"></div>
+                </div>`).join('');
+
+            document.getElementById('courses-container').innerHTML = `
+                <div class="bg-history-card/50 border border-slate-700 rounded-lg p-4 space-y-3">
+                    <div class="h-4 w-1/3 rounded bg-slate-700/60 animate-pulse"></div>
+                    <div class="h-1 w-2/3 rounded bg-slate-700/60 animate-pulse"></div>
+                </div>`;
+        }
+
+        // ---------- aula ao vivo ----------
+        function renderAula(live) {
+            const noAr = !!(live && live.isLive);
+            const titulo = escapar((live && live.title) || 'Aula ao vivo');
+            // A descrição cadastrada é escrita como se a aula já tivesse começado,
+            // então ela só aparece quando a transmissão está de fato no ar.
+            const texto = noAr
+                ? escapar(live.description || 'A sala está aberta no Google Meet.')
+                : 'O professor abre a sala no horário da aula. Quando abrir, o botão aparece aqui.';
+
+            document.getElementById('live-container').innerHTML = `
+                <div class="${noAr
+                    ? 'bg-history-card border border-history-wine/40 border-l-4 border-l-history-wine shadow-lg shadow-amber-950/10'
+                    : 'bg-history-card/60 border border-dashed border-slate-700'}
+                    rounded-xl p-4 sm:p-5 flex flex-wrap gap-4 items-center justify-between">
+                    <div class="min-w-0 flex-1 basis-64 space-y-1">
+                        <span class="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.13em] ${noAr ? 'text-history-wine' : 'text-history-textMuted'}">
+                            <span class="relative flex h-2 w-2">
+                                ${noAr ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-history-wine opacity-75"></span>' : ''}
+                                <span class="relative inline-flex rounded-full h-2 w-2 ${noAr ? 'bg-history-wine' : 'bg-slate-600'}"></span>
+                            </span>
+                            ${noAr ? 'No ar agora' : 'Fora do ar'}
+                        </span>
+                        <h3 class="font-serif font-semibold text-lg text-balance">${titulo}</h3>
+                        <p class="text-sm text-history-textMuted leading-relaxed max-w-prose">${texto}</p>
+                    </div>
+                    ${noAr && live.meetUrl
+                        ? `<button id="meet-btn" class="bg-history-wine hover:bg-history-wineHover text-history-input font-bold text-sm px-5 py-3 rounded-lg transition-colors shrink-0">Entrar na aula</button>`
+                        : ''}
+                </div>`;
+
+            const botao = document.getElementById('meet-btn');
+            if (botao) botao.onclick = () => window.open(live.meetUrl, '_blank', 'noopener');
+        }
+
+        // ---------- estante ----------
+        function renderEstante(comics) {
+            const alvo = document.getElementById('comics-container');
+            const contador = document.getElementById('comics-count');
+
+            if (!comics || comics.length === 0) {
+                alvo.className = "";
+                alvo.innerHTML = `
+                    <div class="border border-dashed border-slate-700 rounded-xl p-6 text-center text-sm text-history-textMuted bg-history-input/40">
+                        <strong class="block font-serif text-base text-slate-100 mb-1">A estante ainda está vazia</strong>
+                        Assim que o professor publicar um quadrinho, ele aparece aqui.
+                    </div>`;
+                contador.innerText = "";
+                return;
+            }
+
+            // Reposto explicitamente: o estado vazio acima zera as classes do contêiner.
+            alvo.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
+            contador.innerText = comics.length === 1 ? "1 título" : `${comics.length} títulos`;
+            const progresso = lerProgresso();
+
+            alvo.innerHTML = comics.map(hq => {
+                const titulo = escapar(tituloDaHQ(hq));
+                const volume = hq.volume ? escapar(hq.volume) : "";
+                const p = progresso[linkDaHQ(hq)];
+                const lida = p && p.total && p.pagina >= p.total;
+                const pct = p && p.total ? Math.min(100, Math.round((p.pagina / p.total) * 100)) : 0;
+
+                const estado = lida
+                    ? `Lida — ${p.total} páginas`
+                    : (p ? `Página ${p.pagina} de ${p.total}` : "Não lida");
+
+                return `
+                    <a href="${destinoLeitor(hq)}" class="group block space-y-2">
+                        <div class="relative rounded-lg overflow-hidden shadow-md shadow-amber-950/20 transition-transform group-hover:-translate-y-1">
+                            <img src="${capaDaHQ(hq)}" loading="lazy" alt="${titulo}"
+                                 class="w-full object-cover aspect-[3/4] bg-history-input">
+                            ${ehRecente(hq.criado_em) ? '<span class="absolute top-2 right-2 bg-history-gold text-history-bg text-[0.58rem] font-extrabold uppercase tracking-[0.1em] px-2 py-0.5 rounded">Novo</span>' : ''}
+                        </div>
+                        ${volume ? `<span class="block text-[0.62rem] font-bold uppercase tracking-[0.12em] text-history-goldHover">${volume}</span>` : ''}
+                        <h5 class="font-serif font-semibold text-sm leading-tight">${titulo}</h5>
+                        ${pct > 0 ? `
+                            <div class="h-[3px] rounded-full bg-slate-700/60 overflow-hidden">
+                                <span class="block h-full rounded-full ${lida ? 'bg-history-olive' : 'bg-history-gold'}" style="width:${pct}%"></span>
+                            </div>` : ''}
+                        <span class="block text-xs text-history-textMuted tabular-nums">${estado}</span>
+                    </a>`;
+            }).join('');
+        }
+
+        // ---------- retomar a leitura ----------
+        function renderRetomar(comics) {
+            const secao = document.getElementById('resume-section');
+            const progresso = lerProgresso();
+
+            // Só oferece HQ que ainda existe no acervo e que não foi terminada.
+            const candidato = (comics || [])
+                .map(hq => ({ hq, p: progresso[linkDaHQ(hq)] }))
+                .filter(x => x.p && x.p.total && x.p.pagina > 1 && x.p.pagina < x.p.total)
+                .sort((a, b) => (b.p.em || 0) - (a.p.em || 0))[0];
+
+            if (!candidato) { secao.classList.add('hidden'); return; }
+
+            const titulo = escapar(tituloDaHQ(candidato.hq));
+            const volume = candidato.hq.volume ? `${escapar(candidato.hq.volume)} · ` : "";
+
+            document.getElementById('resume-container').innerHTML = `
+                <a href="${destinoLeitor(candidato.hq)}"
+                   class="flex items-center gap-4 bg-history-card border border-slate-700 border-l-4 border-l-history-gold rounded-xl p-3 sm:p-4 shadow-md shadow-amber-950/10 hover:border-history-gold transition-colors">
+                    <img src="${capaDaHQ(candidato.hq)}" alt="" aria-hidden="true"
+                         class="w-12 h-16 object-cover rounded shrink-0 bg-history-input">
+                    <span class="flex-1 min-w-0">
+                        <span class="block font-serif font-semibold text-base truncate">${titulo}</span>
+                        <span class="block text-sm text-history-textMuted tabular-nums">${volume}parou na página ${candidato.p.pagina} de ${candidato.p.total}</span>
+                    </span>
+                    <span class="shrink-0 bg-history-gold text-history-bg text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg">Continuar</span>
+                </a>`;
+
+            secao.classList.remove('hidden');
+        }
+
+        // ---------- curso ----------
+        function renderCursos(courses) {
+            const alvo = document.getElementById('courses-container');
+
+            if (!courses || courses.length === 0) {
+                alvo.innerHTML = `<p class="text-sm text-history-textMuted">Nenhum curso disponível no momento.</p>`;
+                return;
+            }
+
+            alvo.innerHTML = courses.map(c => {
+                const titulo = escapar(c.title || c.nome || "Curso sem título");
+                // is_live é por curso. Antes a página usava o estado global da
+                // transmissão aqui, o que acendia "ao vivo" em todos os cursos de uma vez.
+                const noAr = c.is_live === true;
+                const pct = Math.min(100, Math.max(0, Number(c.progress) || 0));
+
+                return `
+                    <div class="bg-history-card/60 border border-slate-700 rounded-lg p-4 flex flex-wrap gap-3 items-center justify-between">
+                        <div class="flex-1 basis-56 min-w-0 space-y-2">
+                            <h3 class="font-serif font-semibold text-base">${titulo}</h3>
+                            ${pct > 0 ? `
+                                <div class="h-[3px] max-w-xs rounded-full bg-slate-700/60 overflow-hidden">
+                                    <span class="block h-full rounded-full bg-history-gold" style="width:${pct}%"></span>
+                                </div>
+                                <span class="block text-xs text-history-textMuted tabular-nums">${pct}% percorrido</span>`
+                            : `<span class="block text-xs text-history-textMuted">Ainda não iniciado</span>`}
+                        </div>
+                        <span class="shrink-0 text-[0.66rem] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-full border ${noAr
+                            ? 'border-history-wine/40 text-history-wine bg-history-wine/10'
+                            : 'border-slate-700 text-history-textMuted bg-history-input'}">
+                            ${noAr ? 'Aula acontecendo' : 'Próxima aula em breve'}
+                        </span>
+                    </div>`;
+            }).join('');
+        }
+
         async function loadDashboard() {
+            mostrarEsqueletos();
+
+            // O Render hiberna: se demorar, explica a espera em vez de deixar a tela parada.
+            const aviso = document.getElementById('server-notice');
+            const relogio = setTimeout(() => aviso.classList.remove('hidden'), 6000);
+
             try {
                 const response = await fetch("https://oficio-backend-jg09.onrender.com/api/dashboard");
                 if (!response.ok) throw new Error("Resposta do servidor não foi OK");
-                
+
                 const data = await response.json();
 
-                // Esconde o banner de erro caso esteja visível
                 document.getElementById('error-banner').classList.add('hidden');
 
-                if (data.liveSession?.isLive) {
-                    document.getElementById('live-title').innerText = data.liveSession.title;
-                    document.getElementById('live-description').innerText = data.liveSession.description;
-                    document.getElementById('meet-btn').onclick = () => window.open(data.liveSession.meetUrl, '_blank');
-                    document.getElementById('live-banner').classList.remove('hidden');
-                } else {
-                    // Se isLive for falso ou não existir, esconde o banner da transmissão automaticamente
-                    document.getElementById('live-banner').classList.add('hidden');
-                }
-
-                // Renderiza Cursos com lógica de automação
-                if (data.courses && data.courses.length > 0) {
-                    const isLive = data.liveSession?.isLive; // Verifica o estado da live
-                    document.getElementById('courses-container').innerHTML = data.courses.map(c => {
-                        const titulo = c.title || c.nome || "Curso sem título";
-                        return `
-                            <div class="bg-history-card border border-slate-700 rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition-all hover:border-history-gold">
-                                <div>
-                                    <h3 class="text-xl font-bold text-history-bg mb-1">${titulo}</h3>
-                                    <p class="text-sm text-slate-400">
-                                        ${isLive ? "A transmissão está liberada!" : "Curso ao vivo — Acesso liberado pelo professor no momento da transmissão."}
-                                    </p>
-                                </div>
-
-                                <div class="mt-4 md:mt-0 flex items-center space-x-2 bg-history-input px-4 py-2 rounded-full border border-slate-800">
-                                    <span class="relative flex h-3 w-3">
-                                        ${isLive 
-                                            ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>' 
-                                            : '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-slate-400"></span>'
-                                        }
-                                    </span>
-                                    <span class="text-xs font-semibold ${isLive ? 'text-green-400' : 'text-slate-300'} uppercase tracking-wider">
-                                        ${isLive ? 'Ao Vivo Agora' : 'Aguardando Início'}
-                                    </span>
-                                </div>
-                            </div>`;
-                    }).join('');
-                }
-
-                // Renderiza Quadrinhos tratando possíveis variações de nomes de coluna
-                if (data.comics && data.comics.length > 0) {
-                    document.getElementById('comics-container').innerHTML = data.comics.map(hq => {
-                        const titulo = hq.title || hq.nome || hq.titulo || "Sem título";
-                        const capa = hq.cover || hq.capa || "";
-                        // A otimização precisa sair da capa já com fallback aplicado, senão
-                        // uma HQ sem capa vira a URL "undefined?width=..." e quebra a imagem.
-                        const capaOtimizada = capa ? `${capa}?width=300&height=400&format=webp` : "assets/app-icon.png";
-                        const linkPdf = hq.pdf_url || hq.pdf || hq.link || "";
-                        console.log("HQ:", titulo, "Link encontrado:", linkPdf);
-                        // Abre no leitor interno: com target="_blank" o aluno saía do app instalado.
-                        const destino = linkPdf
-                            ? `comics.html?pdf=${encodeURIComponent(linkPdf)}&title=${encodeURIComponent(titulo)}`
-                            : "#";
-                            return `
-                                <a href="${destino}" class="bg-history-card border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-history-gold block transition-colors">
-                                    <img src="${capaOtimizada}" loading="lazy" class="rounded-lg mb-2 w-full object-cover aspect-[3/4]" alt="${titulo}">
-                                    <h5 class="text-sm font-bold">${titulo}</h5>
-                                </a>`;
-                    }).join('');
-                } else {
-                    document.getElementById('comics-container').innerHTML = `<p class="text-history-textMuted text-sm">Nenhum quadrinho encontrado.</p>`;
-                }
-
-            } catch (err) { 
+                renderRetomar(data.comics);
+                renderAula(data.liveSession);
+                renderEstante(data.comics);
+                renderCursos(data.courses);
+            } catch (err) {
                 console.error("Erro ao carregar dashboard:", err);
                 document.getElementById('error-banner').classList.remove('hidden');
+                document.getElementById('live-container').innerHTML = "";
+                document.getElementById('comics-container').innerHTML = "";
+                document.getElementById('courses-container').innerHTML = "";
+            } finally {
+                clearTimeout(relogio);
+                aviso.classList.add('hidden');
             }
         }
-        
+
         loadDashboard();
 
         if ('serviceWorker' in navigator) {
