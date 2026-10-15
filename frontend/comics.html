@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leitor de HQ — Ofício da História</title>
+    <title>Leitor de HQ | Ofício da História</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="assets/app-icon.png">
     <link rel="apple-touch-icon" href="assets/app-icon.png">
@@ -117,7 +117,7 @@
         import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
 
         // jsDelivr serve o pacote inteiro do pdfjs-dist. O cdnjs só publica os arquivos de
-        // build, sem standard_fonts/ e cmaps/ — sem eles, PDF com fonte não embutida ou
+        // build, sem standard_fonts/ e cmaps/ - sem eles, PDF com fonte não embutida ou
         // texto CJK renderiza em branco, sem erro nenhum no console.
         const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/';
 
@@ -165,7 +165,7 @@
         const btnProxima = document.getElementById('btn-proxima');
 
         document.getElementById('hq-titulo').innerText = titulo;
-        document.title = `${titulo} — Ofício da História`;
+        document.title = `${titulo} - Ofício da História`;
 
         let documento = null;
         let paginaAtual = 1;

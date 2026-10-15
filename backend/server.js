@@ -8,9 +8,7 @@ const jwt = require('jsonwebtoken');
 // Configuração do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// ==========================================
 // CONFIGURAÇÃO DE SEGURANÇA
-// ==========================================
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const TEACHER_CPF = (process.env.TEACHER_CPF || '').replace(/\D/g, '');
 const TEACHER_PASSWORD_HASH = process.env.TEACHER_PASSWORD_HASH;
@@ -77,10 +75,7 @@ let liveState = {
     meetUrl: "https://meet.google.com/abc-defg-hij"
 };
 
-// ==========================================
 // SUAS ROTAS ORIGINAIS (CORRIGIDAS PARA O SCHEMA)
-// ==========================================
-
 // Login do Professor (antes era validado no HTML, com a senha exposta no navegador)
 app.post('/api/teacher/login', async (req, res) => {
     const { cpf, senha } = req.body;
@@ -186,11 +181,7 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-// ==========================================
 // NOVAS ROTAS ADMINISTRATIVAS (POST COM MULTER)
-// ==========================================
-
-
 // Atualizar Aula Ao Vivo (O jeito correto: Salvando na tabela configuracoes)
 app.post('/api/teacher/live', requireTeacher, async (req, res) => {
     try {
@@ -313,10 +304,7 @@ app.post('/api/admin/cadastrar-hq', requireTeacher, upload.fields([
 });
 
 
-// ==========================================
 // NOVAS ROTAS DE GERENCIAMENTO (GET E DELETE)
-// ==========================================
-
 // Buscar Métricas do Dashboard Master
 app.get('/api/admin/metricas', requireTeacher, async (req, res) => {
     try {

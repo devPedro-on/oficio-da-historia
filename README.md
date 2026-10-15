@@ -1,24 +1,24 @@
-# 🏛️ Ofício da História
+# Ofício da História
 
-Plataforma de ensino imersiva projetada para distribuição de cursos, leitura de quadrinhos históricos e integração de aulas ao vivo via Google Meet. O projeto foi estruturado com foco em altíssimo desempenho, consumo zero de processamento de infraestrutura (custo zero) e portabilidade como um aplicativo instalável (**PWA**).
+Plataforma de ensino de História: cursos, leitura de quadrinhos históricos e aulas ao vivo pelo Google Meet. Roda em hospedagem gratuita e pode ser instalada no celular como app (PWA).
 
 ---
 
-## 🛠️ Tecnologias e Arquitetura
+## Tecnologias e Arquitetura
 
-O ecossistema é dividido de forma isolada em duas camadas de engenharia:
+O projeto tem duas partes:
 
 * **Backend:** API REST construída em Node.js com o framework Express, gerenciando rotas dinâmicas de conteúdo e estados de transmissão com suporte a CORS.
-* **Frontend:** Interface de usuário premium responsiva estilizada via Tailwind CSS, com injeção assíncrona de dados (`fetch API`) e suporte a Progressive Web App (PWA) usando Service Workers (`sw.js`) e Manifestos de instalação móvel.
+* **Frontend:** Interface responsiva feita com Tailwind CSS, com injeção assíncrona de dados (`fetch API`) e suporte a Progressive Web App (PWA) usando Service Workers (`sw.js`) e Manifestos de instalação móvel.
 
 ---
 
-## 🚀 Como Rodar o Projeto no Ambiente Local (WSL Ubuntu)
+## Como Rodar o Projeto no Ambiente Local (WSL Ubuntu)
 
 Siga a ordem dos blocos abaixo no terminal do seu ambiente Linux:
 
 ### 1. Inicializando o Backend
-Navegue até a pasta do backend, garanta que as dependências estão atualizadas no ecossistema e ligue o servidor:
+Navegue até a pasta do backend, instale as dependências e suba o servidor:
 
 ```bash
 # Entrar no diretório do backend
@@ -30,7 +30,7 @@ npm install
 # Iniciar o servidor da API
 npm start
 
-*O terminal deverá retornar:* `🏛️ Servidor do 'Ofício da História' a rodar com sucesso!`  
+*O terminal deverá retornar:* `Servidor do 'Ofício da História' a rodar com sucesso!`  
 *A API estará respondendo localmente em:* `http://localhost:3000/api/dashboard`
 
 ### 2. Inicializando o Frontend

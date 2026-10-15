@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ofício da História — Painel do Professor</title>
+    <title>Ofício da História | Painel do Professor</title>
     <link rel="icon" href="assets/app-icon.png">
     <link rel="apple-touch-icon" href="assets/app-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -294,9 +294,7 @@
             return response;
         }
 
-        // ==========================================
         // CONTROLES DE INTERFACE E MÁSCARAS
-        // ==========================================
         document.getElementById('toggle-password').addEventListener('click', function() {
             const passwordInput = document.getElementById('senhaAluno');
             const eyeOpen = document.getElementById('eye-open');
@@ -344,9 +342,7 @@
             containerCursos.classList.add('hidden');
         });
 
-// ==========================================
         // SINCRO/GET DE DADOS (MÉTRICAS E LISTAS)
-        // ==========================================
         async function carregarDashboard() {
             try {
                 // 1. Carrega Métricas
@@ -493,9 +489,7 @@
             }
         }
 
-        // ==========================================
         // SUBMITS E REQUISIÇÕES (POSTS)
-        // ==========================================
         document.getElementById('live-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('live-btn');
